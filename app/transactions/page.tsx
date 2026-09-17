@@ -111,10 +111,7 @@ export default function TransactionsPage() {
                         {entries.map((entry) => {
                             const len = entry.postings.length;
                             if (len === 2) {
-                                const postings = entry.postings;
-                                const amount = postings[0].amount;
-                                const from_account_type = postings[0].accounts?.account_type ?? "asset";
-                                const to_account_type = postings[1].accounts?.account_type ?? "asset";
+const postings = [...entry.postings].sort((a, b) => a.amount - b.amount);
                                 let from_account = postings[0].accounts?.name ?? "不明";
                                 let to_account = postings[1].accounts?.name ?? "不明";
                                 let type = "";
