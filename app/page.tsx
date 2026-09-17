@@ -8,6 +8,7 @@ type Account = {
     name: string;
     account_type: string;
     parent_account_id: number | null;
+    initial_balance: number;
     sort_order: number;
 };
 
@@ -20,7 +21,7 @@ export default function HomePage() {
         const { data, error } = await supabase
             .from("accounts")
             .select(
-                "id, name, account_type, parent_account_id, sort_order",
+                "id, name, account_type, parent_account_id, initial_balance, sort_order",
             )
             .order("account_type")
             .order("sort_order");
@@ -129,6 +130,9 @@ export default function HomePage() {
                             <span>{account.name}</span>
                             <span className="text-gray-500">
                                 {account.account_type}
+                            </span>
+                            <span>
+                                {account.initial_balance}
                             </span>
                         </li>
                     ))}
