@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { TransactionForm } from "@/components/TransactionForm";
 import { supabase } from "@/lib/supabase";
 
 type Account = {
