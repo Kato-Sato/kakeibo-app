@@ -17,6 +17,10 @@ type Posting = {
         name: string;
         account_type: string;
     } | null;
+    cards: {
+        id: number;
+        name: string;
+    } | null;
 };
 
 type JournalEntry = {
@@ -57,6 +61,10 @@ export default function TransactionsPage() {
                     accounts (
                         name,
                         account_type
+                    ),
+                    cards (
+                        id,
+                        name
                     )
                 )
             `)
@@ -101,6 +109,7 @@ export default function TransactionsPage() {
                             <th>種別</th>
                             <th>摘要</th>
                             <th>金額</th>
+                            <th>カード</th>
                             <th>カテゴリー</th>
                             <th>出金</th>
                             <th>入金</th>
@@ -111,7 +120,11 @@ export default function TransactionsPage() {
                         {entries.map((entry) => {
                             const len = entry.postings.length;
                             if (len === 2) {
-const postings = [...entry.postings].sort((a, b) => a.amount - b.amount);
+                                const postings = entry.postings;
+                                const amount = postings[0].amount;
+                                const from_account_type = postings[0].accounts?.account_type ?? "asset";
+                                const to_account_type = postings[1].accounts?.account_type ?? "asset";
+                                let card = "";
                                 let from_account = postings[0].accounts?.name ?? "不明";
                                 let to_account = postings[1].accounts?.name ?? "不明";
                                 let type = "";
@@ -127,6 +140,11 @@ const postings = [...entry.postings].sort((a, b) => a.amount - b.amount);
                                 } else if (from_account_type === "asset" && to_account_type === "asset") {
                                     type = "振替";
                                     category = `${from_account} → ${to_account}`;
+                                } else if (from_account_type === "liability" && to_account_type === "expense") {
+                                    type = "カード支出";
+                                    category = to_account;
+                                    to_account = "";
+                                    card = from_account;
                                 } else if (from_account_type === "liability" && to_account_type === "asset") {
                                     type = "借入";
                                     category = from_account;
@@ -145,6 +163,7 @@ const postings = [...entry.postings].sort((a, b) => a.amount - b.amount);
                                         <td>{type}</td>
                                         <td>{entry.description}</td>
                                         <td>{Math.abs(amount)}</td>
+                                        <td>{card}</td>
                                         <td>{category}</td>
                                         <td>{from_account}</td>
                                         <td>{to_account}</td>
