@@ -39,7 +39,7 @@ export default function HomePage() {
             setAccountBalances(account_balances);
         }
         void load();
-    }, [account_balances]);
+    }, []);
 
     return (
         <div>

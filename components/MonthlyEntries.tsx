@@ -87,7 +87,7 @@ export function MonthlyEntries({account_type}: { account_type: "income" | "expen
                                         if (account.account_type === account_type && account.parent_account_id === null) {
                                             return (
                                                 <td key={account.id} className="border p-2">
-                                                    {getAmount(month, account.id)}
+                                                    {getAmount(month, account.id) * (account_type === "income" ? -1 : 1)}
                                                 </td>
                                             );
                                         }
