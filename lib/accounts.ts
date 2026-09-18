@@ -8,6 +8,12 @@ export type Account = {
     sort_order: number;
 };
 
+export type AccountBalance = Account & {
+    balance: number;
+};
+
+export const today = "2026-09-18";
+
 export async function loadAccounts() {
     const { data, error } = await supabase
         .from("accounts")
@@ -15,4 +21,13 @@ export async function loadAccounts() {
         .order("id");
     if (error) throw error;
     return (data as Account[]) ?? [];
+}
+
+export async function loadAccountBalances(date: string) {
+    const { data, error } = await supabase
+        .rpc("get_account_balances", {
+            target_date: date
+        });
+    if (error) throw error;
+    return (data as AccountBalance[]) ?? [];
 }

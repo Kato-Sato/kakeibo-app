@@ -16,6 +16,9 @@ export function HeaderMenu() {
                 <li className="inline-block mr-4">
                     <a href="/incomes" className="hover:underline">収入</a>
                 </li>
+                <li className="inline-block mr-4">
+                    <a href="/liabilities" className="hover:underline">債務</a>
+                </li>
             </ul>
         </header>
     );
