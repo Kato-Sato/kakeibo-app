@@ -28,7 +28,7 @@ export default function HomePage() {
 
         setName("");
         setAccountType("asset");
-        await loadAccounts();
+        setAccountBalances(await loadAccountBalances(today));
     }
 
     useEffect(() => {
