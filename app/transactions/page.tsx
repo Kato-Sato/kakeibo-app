@@ -17,7 +17,7 @@ export default function TransactionsPage() {
             setAccounts(accounts);
             setEntries(entries);
         }
-        void load();
+        void load().catch((error) => alert(error instanceof Error ? error.message : String(error)));
     }, []);
 
     return (
