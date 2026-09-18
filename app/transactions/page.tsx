@@ -1,97 +1,27 @@
 "use client";
 import { useEffect, useState } from "react";
 import { TransactionForm } from "@/components/TransactionForm";
-import { supabase } from "@/lib/supabase";
-
-type Account = {
-    id: number;
-    name: string;
-    account_type: string;
-    parent_account_id: number | null;
-};
-
-type Posting = {
-    id: number;
-    amount: number;
-    accounts: {
-        name: string;
-        account_type: string;
-    } | null;
-    cards: {
-        id: number;
-        name: string;
-    } | null;
-};
-
-type JournalEntry = {
-    id: number;
-    occurred_on: string;
-    description: string;
-    postings: Posting[];
-};
+import { loadAccounts, Account } from "@/lib/accounts";
+import { loadEntries, JournalEntry } from "@/lib/entries";
 
 export default function TransactionsPage() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [entries, setEntries] = useState<JournalEntry[]>([]);
 
-    async function loadAccounts() {
-        const { data, error } = await supabase
-            .from("accounts")
-            .select(
-                "id, name, account_type, parent_account_id",
-            )
-            .order("id");
-        if (error) {
-            alert(error.message);
-            return;
-        }
-        setAccounts(data ?? []);
-    }
-
-    async function loadEntries() {
-        const { data, error } = await supabase
-            .from("journal_entries")
-            .select(`
-                id,
-                occurred_on,
-                description,
-                postings (
-                    id,
-                    amount,
-                    accounts (
-                        name,
-                        account_type
-                    ),
-                    cards (
-                        id,
-                        name
-                    )
-                )
-            `)
-            .order("occurred_on", {
-                ascending: false,
-            })
-            .order("id", {
-                ascending: false,
-            });
-        if (error) {
-            alert(error.message);
-            return;
-        }
-        setEntries(
-            (data as JournalEntry[] | null) ?? [],
-        );
-    }
-
     useEffect(() => {
-        void Promise.all([
-            loadAccounts(),
-            loadEntries(),
-        ]);
+        const load = async () => {
+            const [accounts, entries] = await Promise.all([
+                loadAccounts(),
+                loadEntries()
+            ]);
+            setAccounts(accounts);
+            setEntries(entries);
+        }
+        void load();
     }, []);
 
     return (
-        <main className="mx-auto max-w-3xl space-y-10 p-8">
+        <div>
             <section className="space-y-4">
                 <h2 className="text-xl font-semibold">
                     取引一覧
@@ -99,7 +29,9 @@ export default function TransactionsPage() {
 
                 <TransactionForm
                     accounts={accounts}
-                    onCreated={loadEntries}
+                    onCreated={async () => {
+                        setEntries(await loadEntries());
+                    }}
                 />
 
                 <table>
@@ -186,6 +118,6 @@ export default function TransactionsPage() {
                     </tbody>
                 </table>
             </section>
-        </main>
+        </div>
     );
 }
