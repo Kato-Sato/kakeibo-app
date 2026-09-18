@@ -32,7 +32,7 @@ export function MonthlyEntries({account_type}: { account_type: "income" | "expen
             setAccounts(accounts);
             setEntries(entries);
         }
-        void load();
+        void load().catch((error) => alert(error instanceof Error ? error.message : String(error)));
     }, []);
 
     const months = Array.from(
