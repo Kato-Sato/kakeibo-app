@@ -1,17 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { loadAccounts, Account } from "@/lib/accounts";
+import { loadAccounts, loadAccountBalances, Account, AccountBalance, today } from "@/lib/accounts";
 import { supabase } from "@/lib/supabase";
 
-type AccountBalance = Account & {
-    balance: number;
-};
 
 export default function HomePage() {
     const [account_balances, setAccountBalances] = useState<AccountBalance[]>([]);
     const [name, setName] = useState("");
     const [accountType, setAccountType] = useState("asset");
-    const today = new Date().toISOString().slice(0, 10);
 
     async function addAccount( // 見直し
         event: React.FormEvent<HTMLFormElement>,
@@ -35,25 +31,15 @@ export default function HomePage() {
         setAccountBalances(await loadAccountBalances(today));
     }
 
-    async function loadAccountBalances(date: string) {
-        const { data, error } = await supabase
-            .rpc("get_account_balances", {
-                target_date: date
-            });
-        if (error) throw error;
-        return (data as AccountBalance[]) ?? [];
-    }
-
-
     useEffect(() => {
-            const load = async () => {
-                const [account_balances] = await Promise.all([
-                    loadAccountBalances(today)
-                ]);
-                setAccountBalances(account_balances);
-            }
-            void load();
-        }, [account_balances]);
+        const load = async () => {
+            const [account_balances] = await Promise.all([
+                loadAccountBalances(today)
+            ]);
+            setAccountBalances(account_balances);
+        }
+        void load();
+    }, [account_balances]);
 
     return (
         <div>
