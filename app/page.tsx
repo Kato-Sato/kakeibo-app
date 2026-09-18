@@ -11,7 +11,7 @@ export default function HomePage() {
     const [account_balances, setAccountBalances] = useState<AccountBalance[]>([]);
     const [name, setName] = useState("");
     const [accountType, setAccountType] = useState("asset");
-    const today = "2026-09-18";
+    const today = new Date().toISOString().slice(0, 10);
 
     async function addAccount( // 見直し
         event: React.FormEvent<HTMLFormElement>,
