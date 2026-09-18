@@ -30,7 +30,11 @@ export default function TransactionsPage() {
                 <TransactionForm
                     accounts={accounts}
                     onCreated={async () => {
-                        setEntries(await loadEntries());
+                        try {
+                            setEntries(await loadEntries());
+                        } catch (error) {
+                            alert(error instanceof Error ? error.message : String(error));
+                        }
                     }}
                 />
 
