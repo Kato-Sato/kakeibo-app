@@ -1,37 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
+import { loadAccounts, Account } from "@/lib/accounts";
 import { supabase } from "@/lib/supabase";
 
-type Account = {
-    id: number;
-    name: string;
-    account_type: string;
-    parent_account_id: number | null;
-    initial_balance: number;
-    sort_order: number;
+type AccountBalance = Account & {
+    balance: number;
 };
 
 export default function HomePage() {
-    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [account_balances, setAccountBalances] = useState<AccountBalance[]>([]);
     const [name, setName] = useState("");
     const [accountType, setAccountType] = useState("asset");
+    const today = new Date().toISOString().slice(0, 10);
 
-    async function loadAccounts() {
-        const { data, error } = await supabase
-            .from("accounts")
-            .select(
-                "id, name, account_type, parent_account_id, initial_balance, sort_order",
-            )
-            .order("account_type")
-            .order("sort_order");
-        if (error) {
-            alert(error.message);
-            return;
-        }
-        setAccounts(data ?? []);
-    }
-
-    async function addAccount(
+    async function addAccount( // 見直し
         event: React.FormEvent<HTMLFormElement>,
     ) {
         event.preventDefault();
@@ -49,17 +31,32 @@ export default function HomePage() {
         }
 
         setName("");
-        await loadAccounts();
+        setAccountType("asset");
+        setAccountBalances(await loadAccountBalances(today));
     }
 
+    async function loadAccountBalances(date: string) {
+        const { data, error } = await supabase
+            .rpc("get_account_balances", {
+                target_date: date
+            });
+        if (error) throw error;
+        return (data as AccountBalance[]) ?? [];
+    }
+
+
     useEffect(() => {
-        void Promise.all([
-            loadAccounts()
-        ]);
-    }, []);
+            const load = async () => {
+                const [account_balances] = await Promise.all([
+                    loadAccountBalances(today)
+                ]);
+                setAccountBalances(account_balances);
+            }
+            void load();
+        }, [account_balances]);
 
     return (
-        <main className="mx-auto max-w-3xl space-y-10 p-8">
+        <div>
             <h1 className="text-2xl font-bold">
                 家計簿
             </h1>
@@ -121,22 +118,25 @@ export default function HomePage() {
                 </h2>
 
                 <ul className="divide-y rounded border">
-                    {accounts.map((account) => (
-                        <li
-                            key={account.id}
-                            className="flex justify-between p-3"
-                        >
-                            <span>{account.name}</span>
-                            <span className="text-gray-500">
-                                {account.account_type}
-                            </span>
-                            <span>
-                                {account.initial_balance}
-                            </span>
-                        </li>
-                    ))}
+                    {account_balances.map((account_balance) => {
+                        if ( account_balance.account_type !== "asset" ) return;
+                        return (
+                            <li
+                                key={account_balance.id}
+                                className="flex justify-between p-3"
+                            >
+                                <span>{account_balance.name}</span>
+                                <span className="text-gray-500">
+                                    {account_balance.account_type}
+                                </span>
+                                <span>
+                                    {account_balance.balance}
+                                </span>
+                            </li>
+                        );
+                    })}
                 </ul>
             </section>
-        </main>
+        </div>
     );
 }
