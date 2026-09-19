@@ -3,19 +3,23 @@ import { useEffect, useState } from "react";
 import { TransactionForm } from "@/components/TransactionForm";
 import { loadAccounts, Account } from "@/lib/accounts";
 import { loadEntries, JournalEntry } from "@/lib/entries";
+import { loadCards, Card } from "@/lib/cards";
 
 export default function TransactionsPage() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [entries, setEntries] = useState<JournalEntry[]>([]);
+    const [cards, setCards] = useState<Card[]>([]);
 
     useEffect(() => {
         const load = async () => {
-            const [accounts, entries] = await Promise.all([
+            const [accounts, entries, cards] = await Promise.all([
                 loadAccounts(),
-                loadEntries()
+                loadEntries(),
+                loadCards()
             ]);
             setAccounts(accounts);
             setEntries(entries);
+            setCards(cards);
         }
         void load().catch((error) => alert(error instanceof Error ? error.message : String(error)));
     }, []);
@@ -29,6 +33,7 @@ export default function TransactionsPage() {
 
                 <TransactionForm
                     accounts={accounts}
+                    cards={cards}
                     onCreated={async () => {
                         try {
                             setEntries(await loadEntries());
