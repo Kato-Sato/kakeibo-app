@@ -1,51 +1,33 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { loadAccounts, Account } from "@/lib/accounts";
 
-type Account = {
-    id: number;
-    name: string;
-};
+type TransactionType = "expense" | "income" | "transfer" | "borrow" | "repay";
 
 type TransactionFormProps = {
     accounts: Account[];
     onCreated: () => Promise<void>;
 };
 
-export function TransactionForm({
-    accounts,
-    onCreated,
-}: TransactionFormProps) {
-    const [occurredOn, setOccurredOn] = useState(
-        new Date().toISOString().slice(0, 10),
-    );
+export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
+    const [occurred_on, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+    const [transaction_type, setTransactionType] = useState<TransactionType>("expense");
     const [description, setDescription] = useState("");
-    const [fromAccountId, setFromAccountId] =
-        useState("");
-    const [toAccountId, setToAccountId] = useState("");
-    const [amount, setAmount] = useState("");
+    const [card_id, setCardId] = useState<number | "">("");
+    const [fromAccountId, setFromAccountId] = useState<number | "">("");
+    const [toAccountId, setToAccountId] = useState<number | "">("");
+    const [amount, setAmount] = useState<number | "">("");
 
-    async function submit(
-        event: React.FormEvent<HTMLFormElement>,
-    ) {
+    async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        const numericAmount = Number(amount);
-
-        const { data: entry, error: entryError } =
-            await supabase
-                .from("journal_entries")
-                .insert({
-                    occurred_on: occurredOn,
-                    description,
-                })
-                .select("id")
-                .single();
-
-        if (entryError) {
-            alert(entryError.message);
-            return;
-        }
+        const { data: entry, error: entryError } = await supabase
+            .from("journal_entries")
+            .insert({occurred_on, description})
+            .select("id")
+            .single();
+        if (entryError) throw entryError;
 
         const { error: postingsError } = await supabase
             .from("postings")
@@ -53,15 +35,14 @@ export function TransactionForm({
                 {
                     journal_entry_id: entry.id,
                     account_id: Number(fromAccountId),
-                    amount: -numericAmount,
+                    amount: -amount
                 },
                 {
                     journal_entry_id: entry.id,
                     account_id: Number(toAccountId),
-                    amount: numericAmount,
+                    amount: amount
                 },
             ]);
-
         if (postingsError) {
             /*
              * Posting登録に失敗するとJournalEntryだけ残る。
@@ -72,9 +53,37 @@ export function TransactionForm({
         }
 
         setDescription("");
-        setAmount("");
-
+        setAmount(0);
         await onCreated();
+    }
+
+    function getFromAccountOptions() {
+        if (transaction_type === "expense") {
+            return accounts.filter((account) => ["asset", "liability"].includes(account.account_type));
+        }else if (transaction_type === "income") {
+            return accounts.filter((account) => account.account_type === "income");
+        }else if (transaction_type === "transfer") {
+            return accounts.filter((account) => account.account_type === "asset");
+        }else if (transaction_type === "borrow") {
+            return accounts.filter((account) => account.account_type === "liability");
+        }else if (transaction_type === "repay") {
+            return accounts.filter((account) => account.account_type === "asset");
+        }
+        return [];
+    }
+    function getToAccountOptions() {
+        if (transaction_type === "expense") {
+            return accounts.filter((account) => account.account_type === "expense");
+        }else if (transaction_type === "income") {
+            return accounts.filter((account) => account.account_type === "asset");
+        }else if (transaction_type === "transfer") {
+            return accounts.filter((account) => account.account_type === "asset");
+        }else if (transaction_type === "borrow") {
+            return accounts.filter((account) => account.account_type === "asset");
+        }else if (transaction_type === "repay") {
+            return accounts.filter((account) => account.account_type === "liability");
+        }
+        return [];
     }
 
     return (
@@ -84,13 +93,26 @@ export function TransactionForm({
         >
             <input
                 type="date"
-                value={occurredOn}
+                value={occurred_on}
                 onChange={(event) =>
                     setOccurredOn(event.target.value)
                 }
                 required
                 className="w-full rounded border px-3 py-2"
             />
+
+            <select
+                value={transaction_type}
+                onChange={(event) => setTransactionType(event.target.value as TransactionType)}
+                required
+                className="w-full rounded border px-3 py-2"
+            >
+                <option value="expense">支出</option>
+                <option value="income">収入</option>
+                <option value="transfer">振替</option>
+                <option value="borrow">借入</option>
+                <option value="repay">返済</option>
+            </select>
 
             <input
                 value={description}
@@ -102,21 +124,40 @@ export function TransactionForm({
                 className="w-full rounded border px-3 py-2"
             />
 
+            {/* <label className="block text-sm font-medium text-gray-700">
+                Account
+            </label> */}
+            <select
+                value={card_id}
+                onChange={(event) => {
+                    // setFromAccountId(Number(event.target.value)) カードに対応するAccount
+                    setCardId(Number(event.target.value))
+                }}
+                required
+                className="w-full rounded border px-3 py-2"
+            >
+                <option value="">現金払い</option>
+                {accounts.map((account) => (
+                    <option
+                        key={account.id}
+                        value={account.id}
+                    >
+                        {account.name}
+                    </option>
+                ))}
+            </select>
+
             <div className="grid grid-cols-2 gap-3">
                 <select
                     value={fromAccountId}
-                    onChange={(event) =>
-                        setFromAccountId(
-                            event.target.value,
-                        )
-                    }
+                    onChange={(event) => setFromAccountId(Number(event.target.value))}
                     required
                     className="rounded border px-3 py-2"
                 >
                     <option value="">
                         移動元Account
                     </option>
-                    {accounts.map((account) => (
+                    {getFromAccountOptions().map((account) => (
                         <option
                             key={account.id}
                             value={account.id}
@@ -128,18 +169,14 @@ export function TransactionForm({
 
                 <select
                     value={toAccountId}
-                    onChange={(event) =>
-                        setToAccountId(
-                            event.target.value,
-                        )
-                    }
+                    onChange={(event) => setToAccountId(Number(event.target.value))}
                     required
                     className="rounded border px-3 py-2"
                 >
                     <option value="">
                         移動先Account
                     </option>
-                    {accounts.map((account) => (
+                    {getToAccountOptions().map((account) => (
                         <option
                             key={account.id}
                             value={account.id}
@@ -156,7 +193,7 @@ export function TransactionForm({
                 step="1"
                 value={amount}
                 onChange={(event) =>
-                    setAmount(event.target.value)
+                    setAmount(Number(event.target.value))
                 }
                 placeholder="金額"
                 required
