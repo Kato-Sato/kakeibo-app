@@ -27,7 +27,10 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
             .insert({occurred_on, description})
             .select("id")
             .single();
-        if (entryError) throw entryError;
+        if (entryError) {
+            alert(entryError.message);
+            return;
+        }
 
         const { error: postingsError } = await supabase
             .from("postings")
@@ -35,12 +38,12 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
                 {
                     journal_entry_id: entry.id,
                     account_id: Number(fromAccountId),
-                    amount: -amount
+                    amount: -Number(amount)
                 },
                 {
                     journal_entry_id: entry.id,
                     account_id: Number(toAccountId),
-                    amount: amount
+                    amount: Number(amount)
                 },
             ]);
         if (postingsError) {
@@ -53,7 +56,7 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
         }
 
         setDescription("");
-        setAmount(0);
+        setAmount("");
         await onCreated();
     }
 
@@ -131,9 +134,9 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
                 value={card_id}
                 onChange={(event) => {
                     // setFromAccountId(Number(event.target.value)) カードに対応するAccount
-                    setCardId(Number(event.target.value))
+                    const value = event.target.value;
+                    setCardId(value === "" ? "" : Number(value));
                 }}
-                required
                 className="w-full rounded border px-3 py-2"
             >
                 <option value="">現金払い</option>
