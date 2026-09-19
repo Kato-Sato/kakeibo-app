@@ -38,7 +38,7 @@ export default function TransactionsPage() {
                         try {
                             setEntries(await loadEntries());
                         } catch (error) {
-                            alert(error instanceof Error ? error.message : String(error));
+                            alert(`onCreatedError: ${error instanceof Error ? error.message : String(error)}`);
                         }
                     }}
                 />
@@ -59,15 +59,15 @@ export default function TransactionsPage() {
 
                     <tbody>
                         {entries.map((entry) => {
-                            const len = entry.postings.length;
-                            if (len === 2) {
-                                const postings = entry.postings;
-                                const amount = postings[0].amount;
-                                const from_account_type = postings[0].accounts?.account_type ?? "asset";
-                                const to_account_type = postings[1].accounts?.account_type ?? "asset";
+                            const len = entry.transaction_lines.length;
+                            if (len === 1) {
+                                const transactionLine = entry.transaction_lines[0];
+                                const amount = transactionLine.amount;
+                                const from_account_type = transactionLine.from_account?.account_type ?? "asset";
+                                const to_account_type = transactionLine.to_account?.account_type ?? "asset";
                                 let card = "";
-                                let from_account = postings[0].accounts?.name ?? "不明";
-                                let to_account = postings[1].accounts?.name ?? "不明";
+                                let from_account = transactionLine.from_account?.name ?? "不明";
+                                let to_account = transactionLine.to_account?.name ?? "不明";
                                 let type = "";
                                 let category = "";
                                 if (from_account_type === "asset" && to_account_type === "expense") {

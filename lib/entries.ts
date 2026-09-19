@@ -13,10 +13,26 @@ export type Posting = {
     } | null;
 };
 
+export type TransactionLine = {
+    id: number;
+    journal_entry_id: number;
+    description: string;
+    from_account: {
+        name: string;
+        account_type: string;
+    } | null;
+    to_account: {
+        name: string;
+        account_type: string;
+    } | null;
+    amount: number;
+};
+
 export type JournalEntry = {
     id: number;
     occurred_on: string;
     description: string;
+    transaction_lines: TransactionLine[];
     postings: Posting[];
 };
 
@@ -27,6 +43,20 @@ export async function loadEntries() {
             id,
             occurred_on,
             description,
+            transaction_lines (
+                id,
+                journal_entry_id,
+                description,
+                from_account:accounts!from_account_id (
+                    name,
+                    account_type
+                ),
+                to_account:accounts!to_account_id (
+                    name,
+                    account_type
+                ),
+                amount
+            ),
             postings (
                 id,
                 amount,
@@ -46,6 +76,9 @@ export async function loadEntries() {
         .order("id", {
             ascending: false,
         });
-    if (error) throw error;
-    return (data ?? []) as unknown as JournalEntry[]; // 型の強制変換
+    if (error) {
+        alert(`loadEntriesError: ${error.message}`);
+        return [];
+    }
+    return (data as unknown as JournalEntry[]); // 型の強制変換
 }

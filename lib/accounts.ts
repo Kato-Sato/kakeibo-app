@@ -19,7 +19,10 @@ export async function loadAccounts() {
         .from("accounts")
         .select("id, name, account_type, parent_account_id, sort_order")
         .order("id");
-    if (error) throw error;
+    if (error){
+        alert(`loadAccountsError: ${error.message}`);
+        return [];
+    }
     return (data as Account[]) ?? [];
 }
 
@@ -28,6 +31,9 @@ export async function loadAccountBalances(date: string) {
         .rpc("get_account_balances", {
             target_date: date
         });
-    if (error) throw error;
+    if (error){
+        alert(`loadAccountBalancesError: ${error.message}`);
+        return [];
+    }
     return (data as AccountBalance[]) ?? [];
 }
