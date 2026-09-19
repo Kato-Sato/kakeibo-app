@@ -1,16 +1,18 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { loadAccounts, Account } from "@/lib/accounts";
+import { Account } from "@/lib/accounts";
+import { Card } from "@/lib/cards";
 
 type TransactionType = "expense" | "income" | "transfer" | "borrow" | "repay";
 
 type TransactionFormProps = {
     accounts: Account[];
+    cards:  Card[];
     onCreated: () => Promise<void>;
 };
 
-export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
+export function TransactionForm({accounts, cards, onCreated}: TransactionFormProps) {
     const [occurred_on, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
     const [transaction_type, setTransactionType] = useState<TransactionType>("expense");
     const [description, setDescription] = useState("");
@@ -21,6 +23,11 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        
+        if (fromAccountId === toAccountId) {
+            alert("移動元Accountと移動先Accountは同じにできません");
+            return;
+        }
 
         const { data: entry, error: entryError } = await supabase
             .from("journal_entries")
@@ -133,19 +140,24 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
             <select
                 value={card_id}
                 onChange={(event) => {
-                    // setFromAccountId(Number(event.target.value)) カードに対応するAccount
                     const value = event.target.value;
-                    setCardId(value === "" ? "" : Number(value));
+                    if (value === "") {
+                        setCardId("");
+                        setFromAccountId(1); // 財布
+                    } else {
+                        setCardId(Number(value));
+                        setFromAccountId(Number(value));
+                    }
                 }}
                 className="w-full rounded border px-3 py-2"
             >
                 <option value="">現金払い</option>
-                {accounts.map((account) => (
+                {cards.map((card) => (
                     <option
-                        key={account.id}
-                        value={account.id}
+                        key={card.id}
+                        value={card.payment_account_id}
                     >
-                        {account.name}
+                        {card.name}
                     </option>
                 ))}
             </select>
@@ -195,9 +207,10 @@ export function TransactionForm({accounts, onCreated}: TransactionFormProps) {
                 min="1"
                 step="1"
                 value={amount}
-                onChange={(event) =>
-                    setAmount(Number(event.target.value))
-                }
+                onChange={(event) => {
+                    const value = event.target.value;
+                    setAmount(value === "" ? "" : Number(value));
+                }}
                 placeholder="金額"
                 required
                 className="w-full rounded border px-3 py-2"

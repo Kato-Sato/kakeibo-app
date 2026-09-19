@@ -1,5 +1,3 @@
-// "use client";
-
 export function HeaderMenu() {
     return (
         <header className="bg-gray-800 text-white p-4">

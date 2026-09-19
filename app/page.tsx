@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { loadAccounts, loadAccountBalances, Account, AccountBalance, today } from "@/lib/accounts";
+import { loadAccountBalances, AccountBalance, today } from "@/lib/accounts";
 import { supabase } from "@/lib/supabase";
 
 
