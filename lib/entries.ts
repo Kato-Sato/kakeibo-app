@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { Account } from "@/lib/accounts";
 
 export type Posting = {
     id: number;
@@ -13,11 +14,19 @@ export type Posting = {
     } | null;
 };
 
+type TransactionLine = {
+    id: number;
+    description: string;
+    amount: number;
+    from_account: Account | null;
+    to_account: Account | null;
+}
+
 export type JournalEntry = {
     id: number;
     occurred_on: string;
     description: string;
-    postings: Posting[];
+    transaction_lines: TransactionLine[];
 };
 
 export async function loadEntries() {
@@ -27,16 +36,19 @@ export async function loadEntries() {
             id,
             occurred_on,
             description,
-            postings (
+            transaction_lines (
                 id,
+                description,
                 amount,
-                accounts (
+                from_account:accounts!from_account_id (
+                    id,
                     name,
                     account_type
                 ),
-                cards (
+                to_account:accounts!to_account_id (
                     id,
-                    name
+                    name,
+                    account_type
                 )
             )
         `)
@@ -46,6 +58,10 @@ export async function loadEntries() {
         .order("id", {
             ascending: false,
         });
-    if (error) throw error;
-    return (data ?? []) as unknown as JournalEntry[]; // 型の強制変換
+    if (error) {
+        alert(`loadEntries_error: ${error.message}`);
+        throw error;
+        return [];
+    };
+    return (data ?? []) as unknown as JournalEntry[];
 }

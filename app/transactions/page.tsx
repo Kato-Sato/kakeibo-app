@@ -43,7 +43,7 @@ export default function TransactionsPage() {
                     }}
                 />
 
-                <table>
+                <table className="w-full divide-y rounded border">
                     <thead>
                         <tr>
                             <th>日付</th>
@@ -59,15 +59,17 @@ export default function TransactionsPage() {
 
                     <tbody>
                         {entries.map((entry) => {
-                            const len = entry.postings.length;
-                            if (len === 2) {
-                                const postings = entry.postings;
-                                const amount = postings[0].amount;
-                                const from_account_type = postings[0].accounts?.account_type ?? "asset";
-                                const to_account_type = postings[1].accounts?.account_type ?? "asset";
+                            const transaction_lines = entry.transaction_lines ?? [];
+                            console.log("transaction_lines", transaction_lines);
+                            const len = transaction_lines.length;
+                            if (len === 1) {
+                                const transaction_line = transaction_lines[0];
+                                const amount = transaction_line.amount;
+                                const from_account_type = transaction_line.from_account?.account_type ?? "asset";
+                                const to_account_type = transaction_line.to_account?.account_type ?? "asset";
                                 let card = "";
-                                let from_account = postings[0].accounts?.name ?? "不明";
-                                let to_account = postings[1].accounts?.name ?? "不明";
+                                let from_account = transaction_line.from_account?.name ?? "不明";
+                                let to_account = transaction_line.to_account?.name ?? "不明";
                                 let type = "";
                                 let category = "";
                                 if (from_account_type === "asset" && to_account_type === "expense") {
@@ -111,7 +113,7 @@ export default function TransactionsPage() {
                                     </tr>
                                 );
                             } else if (len >= 3) {
-                                return entry.postings.map((posting) => (
+                                return transaction_lines.map((transaction_line) => (
                                     <tr key={entry.id} className="rounded border p-4">
                                         <td>{entry.occurred_on}</td>
                                         <td>{entry.description}</td>
