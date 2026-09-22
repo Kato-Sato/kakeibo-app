@@ -180,8 +180,8 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
             return;
         }
 
-        lines.forEach(async (line) => {
-            const { card_id, from_account_id, to_account_id, amount } = line;
+        await Promise.all(lines.map(async (line) => {
+            const { from_account_id, to_account_id, amount } = line;
             const description = line.description === "" ? summary : line.description;
             const { error: transactionLinesError } = await supabase
                 .from("transaction_lines")
@@ -194,13 +194,8 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
                 });
             if (transactionLinesError) {
                 alert(`submitError: ${transactionLinesError.message}`);
-                return;
-            /*
-             * transactionLine登録に失敗するとJournalEntryだけ残る。
-             * これは試作上の一時的な制限。
-             */
             }
-        })
+        }));
 
         setLines([{
             description: "",
