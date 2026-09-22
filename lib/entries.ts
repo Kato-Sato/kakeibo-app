@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { Account } from "@/lib/accounts";
 
 export type Posting = {
     id: number;
@@ -13,27 +14,19 @@ export type Posting = {
     } | null;
 };
 
-export type TransactionLine = {
+type TransactionLine = {
     id: number;
-    journal_entry_id: number;
     description: string;
-    from_account: {
-        name: string;
-        account_type: string;
-    } | null;
-    to_account: {
-        name: string;
-        account_type: string;
-    } | null;
     amount: number;
-};
+    from_account: Account | null;
+    to_account: Account | null;
+}
 
 export type JournalEntry = {
     id: number;
     occurred_on: string;
     description: string;
     transaction_lines: TransactionLine[];
-    postings: Posting[];
 };
 
 export async function loadEntries() {
@@ -45,28 +38,17 @@ export async function loadEntries() {
             description,
             transaction_lines (
                 id,
-                journal_entry_id,
                 description,
+                amount,
                 from_account:accounts!from_account_id (
+                    id,
                     name,
                     account_type
                 ),
                 to_account:accounts!to_account_id (
-                    name,
-                    account_type
-                ),
-                amount
-            ),
-            postings (
-                id,
-                amount,
-                accounts (
-                    name,
-                    account_type
-                ),
-                cards (
                     id,
-                    name
+                    name,
+                    account_type
                 )
             )
         `)
@@ -77,8 +59,9 @@ export async function loadEntries() {
             ascending: false,
         });
     if (error) {
-        alert(`loadEntriesError: ${error.message}`);
+        alert(`loadEntries_error: ${error.message}`);
+        throw error;
         return [];
-    }
-    return (data as unknown as JournalEntry[]); // 型の強制変換
+    };
+    return (data ?? []) as unknown as JournalEntry[];
 }
