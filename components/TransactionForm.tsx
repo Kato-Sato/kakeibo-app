@@ -160,7 +160,16 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        
+
+        if (lines.some((line) =>
+            line.from_account_id !== "" &&
+            line.to_account_id !== "" &&
+            line.from_account_id === line.to_account_id
+        )) {
+            alert("移動元Accountと移動先Accountは同じにできません");
+            return;
+        }
+
         const { data: entry, error: entryError } = await supabase
             .from("journal_entries")
             .insert({occurred_on, summary})
