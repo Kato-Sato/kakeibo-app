@@ -3,17 +3,12 @@ import { supabase } from "@/lib/supabase";
 export type Account = {
     id: number;
     name: string;
-    account_type: AccountType;
-};
-
-export type AccountType = "expense" | "income" | "asset" | "liability";
-
-export type AccountDetail = Account & {
+    account_type: string;
     parent_account_id: number | null;
     sort_order: number;
-}
+};
 
-export type AccountBalance = AccountDetail & {
+export type AccountBalance = Account & {
     balance: number;
 };
 
@@ -23,12 +18,12 @@ export async function loadAccounts() {
     const { data, error } = await supabase
         .from("accounts")
         .select("id, name, account_type, parent_account_id, sort_order")
-        .order("sort_order");
+        .order("id");
     if (error){
         alert(`loadAccountsError: ${error.message}`);
         return [];
     }
-    return (data as AccountDetail[]) ?? [];
+    return (data as Account[]) ?? [];
 }
 
 export async function loadAccountBalances(date: string) {

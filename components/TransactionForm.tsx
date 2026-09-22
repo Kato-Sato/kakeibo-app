@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Account, AccountType } from "@/lib/accounts";
+import { Account } from "@/lib/accounts";
 import { Card } from "@/lib/cards";
 
-export type TransactionType = "expense" | "income" | "transfer" | "borrow" | "repay";
+type TransactionType = "expense" | "income" | "transfer" | "borrow" | "repay";
 
 type TransactionFormProps = {
     accounts: Account[];
@@ -17,14 +17,14 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
     const [transaction_type, setTransactionType] = useState<TransactionType>("expense");
     const [description, setDescription] = useState("");
     const [card_id, setCardId] = useState<number | "">("");
-    const [from_account_id, setFromAccountId] = useState<number | "">("");
-    const [to_account_id, setToAccountId] = useState<number | "">("");
+    const [fromAccountId, setFromAccountId] = useState<number | "">("");
+    const [toAccountId, setToAccountId] = useState<number | "">("");
     const [amount, setAmount] = useState<number | "">("");
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         
-        if (from_account_id === to_account_id) {
+        if (fromAccountId === toAccountId) {
             alert("移動元Accountと移動先Accountは同じにできません");
             return;
         }
@@ -35,23 +35,30 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
             .select("id")
             .single();
         if (entryError) {
-            alert(`submit_journal_entries_error: ${entryError.message}`);
+            alert(entryError.message);
             return;
         }
 
-        const { error: transactionLinesError } = await supabase
-            .from("transaction_lines")
+        const { error: postingsError } = await supabase
+            .from("postings")
             .insert([
                 {
                     journal_entry_id: entry.id,
-                    description,
-                    from_account_id,
-                    to_account_id,
-                    amount
-                }
+                    account_id: Number(fromAccountId),
+                    amount: -Number(amount)
+                },
+                {
+                    journal_entry_id: entry.id,
+                    account_id: Number(toAccountId),
+                    amount: Number(amount)
+                },
             ]);
-        if (transactionLinesError) {
-            alert(`submit_transaction_lines_error: ${transactionLinesError.message}`);
+        if (postingsError) {
+            /*
+             * Posting登録に失敗するとJournalEntryだけ残る。
+             * これは試作上の一時的な制限。
+             */
+            alert(postingsError.message);
             return;
         }
 
@@ -175,7 +182,7 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
 
             <div className="grid grid-cols-2 gap-3">
                 <select
-                    value={from_account_id}
+                    value={fromAccountId}
                     onChange={(event) => setFromAccountId(Number(event.target.value))}
                     required
                     className="rounded border px-3 py-2"
@@ -194,7 +201,7 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
                 </select>
 
                 <select
-                    value={to_account_id}
+                    value={toAccountId}
                     onChange={(event) => setToAccountId(Number(event.target.value))}
                     required
                     className="rounded border px-3 py-2"
