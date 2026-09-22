@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { Account } from "@/lib/accounts";
 
 export type Posting = {
     id: number;
@@ -6,7 +7,7 @@ export type Posting = {
     accounts: {
         name: string;
         account_type: string;
-    } | null;
+    } | "";
     cards: {
         id: number;
         name: string;
@@ -17,23 +18,16 @@ export type TransactionLine = {
     id: number;
     journal_entry_id: number;
     description: string;
-    from_account: {
-        name: string;
-        account_type: string;
-    } | null;
-    to_account: {
-        name: string;
-        account_type: string;
-    } | null;
+    from_account: Account | null;
+    to_account: Account | null;
     amount: number;
 };
 
 export type JournalEntry = {
     id: number;
     occurred_on: string;
-    description: string;
+    summary: string;
     transaction_lines: TransactionLine[];
-    postings: Posting[];
 };
 
 export async function loadEntries() {
@@ -42,7 +36,7 @@ export async function loadEntries() {
         .select(`
             id,
             occurred_on,
-            description,
+            summary,
             transaction_lines (
                 id,
                 journal_entry_id,
@@ -56,18 +50,6 @@ export async function loadEntries() {
                     account_type
                 ),
                 amount
-            ),
-            postings (
-                id,
-                amount,
-                accounts (
-                    name,
-                    account_type
-                ),
-                cards (
-                    id,
-                    name
-                )
             )
         `)
         .order("occurred_on", {

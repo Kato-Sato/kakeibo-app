@@ -12,79 +12,23 @@ type TransactionFormProps = {
     onCreated: () => Promise<void>;
 };
 
-export function TransactionForm({accounts, cards, onCreated}: TransactionFormProps) {
-    const [occurred_on, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
-    const [transaction_type, setTransactionType] = useState<TransactionType>("expense");
-    const [description, setDescription] = useState("");
-    const [card_id, setCardId] = useState<number | "">("");
-    const [fromAccountId, setFromAccountId] = useState<number | "">("");
-    const [toAccountId, setToAccountId] = useState<number | "">("");
-    const [amount, setAmount] = useState<number | "">("");
-
-    async function submit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        
-        if (fromAccountId === toAccountId) {
-            alert("移動元Accountと移動先Accountは同じにできません");
-            return;
-        }
-
-        const { data: entry, error: entryError } = await supabase
-            .from("journal_entries")
-            .insert({occurred_on, description})
-            .select("id")
-            .single();
-        if (entryError) {
-            alert(entryError.message);
-            return;
-        }
-
-        const { error: postingsError } = await supabase
-            .from("postings")
-            .insert([
-                {
-                    journal_entry_id: entry.id,
-                    account_id: Number(fromAccountId),
-                    amount: -Number(amount)
-                },
-                {
-                    journal_entry_id: entry.id,
-                    account_id: Number(toAccountId),
-                    amount: Number(amount)
-                },
-            ]);
-        if (postingsError) {
-            /*
-             * Posting登録に失敗するとJournalEntryだけ残る。
-             * これは試作上の一時的な制限。
-             */
-            alert(postingsError.message);
-            return;
-        }
-
-        const { error: transactionLinesError } = await supabase
-            .from("transaction_lines")
-            .insert({
-                journal_entry_id: entry.id,
-                description,
-                amount: Number(amount),
-                from_account_id: Number(fromAccountId),
-                to_account_id: Number(toAccountId)
-            })
-        if (transactionLinesError) {
-            /*
-             * transactionLine登録に失敗するとJournalEntryだけ残る。
-             * これは試作上の一時的な制限。
-             */
-            alert(transactionLinesError.message);
-            return;
-        }
-
-        setDescription("");
-        setAmount("");
-        await onCreated();
+type Line = {
+        description: string;
+        card_id: number | "";
+        from_account_id: number | "";
+        to_account_id: number | "";
+        amount: number | "";
     }
 
+type TransactionLineFormProps = {
+    line: Line
+}
+
+
+// null check
+
+function TransactionLineForm({accounts, cards, transaction_type, line, onChange}:
+    {accounts: Account[]; cards: Card[]; transaction_type: TransactionType; line: Line; onChange: (line: Line) => void}) {
     function getFromAccountOptions() {
         if (transaction_type === "expense") {
             return accounts.filter((account) => ["asset", "liability"].includes(account.account_type));
@@ -113,6 +57,162 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
         }
         return [];
     }
+    return (
+        <div className="grid grid-cols-5 gap-3">
+            <input
+                value={line.description}
+                onChange={(event) =>
+                    onChange({...line, description: event.target.value})
+                }
+                placeholder="摘要"
+                className="w-full rounded border px-3 py-2"
+            />
+            <select
+                value={line.card_id}
+                onChange={(event) => {
+                    const card_id = event.target.dataset.cardId;
+                    const value = event.target.value;
+                    if (value === "") {
+                        onChange({...line, card_id: "", from_account_id: 1}); // 財布
+                    } else {
+                        onChange({...line, card_id: Number(card_id), from_account_id: Number(value)});
+                    }
+                }}
+                className="w-full rounded border px-3 py-2"
+            >
+                <option value="">現金払い</option>
+                {cards.map((card) => (
+                    <option
+                        key={card.id}
+                        value={card.payment_account_id}
+                        data-card-id={card.id}
+                    >
+                        {card.name}
+                    </option>
+                ))}
+            </select>
+            <select
+                value={line.from_account_id}
+                onChange={(event) =>
+                    onChange({...line, from_account_id: Number(event.target.value)})
+                }
+                required
+                className="rounded border px-3 py-2"
+            >
+                <option value="">
+                    移動元Account
+                </option>
+                {getFromAccountOptions().map((account) => (
+                    <option
+                        key={account.id}
+                        value={account.id}
+                    >
+                        {account.name}
+                    </option>
+                ))}
+            </select>
+            <select
+                value={line.to_account_id}
+                onChange={(event) => onChange({...line, to_account_id: Number(event.target.value)})}
+                required
+                className="rounded border px-3 py-2"
+            >
+                <option value="">
+                    移動先Account
+                </option>
+                {getToAccountOptions().map((account) => (
+                    <option
+                        key={account.id}
+                        value={account.id}
+                    >
+                        {account.name}
+                    </option>
+                ))}
+            </select>
+            <input
+                type="number"
+                min="1"
+                step="1"
+                value={line.amount}
+                onChange={(event) => {
+                    const value = event.target.value;
+                    onChange({...line, amount: value === "" ? "" : Number(value)});
+                }}
+                placeholder="金額"
+                required
+                className="w-full rounded border px-3 py-2"
+            />
+        </div>
+    )
+}
+
+export function TransactionForm({accounts, cards, onCreated}: TransactionFormProps) {
+    const [occurred_on, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+    const [transaction_type, setTransactionType] = useState<TransactionType>("expense");
+    const [summary, setSummary] = useState<string>("");
+    const [lines, setLines] = useState<Line[]>([{
+        description: "",
+        card_id: "",
+        from_account_id: "",
+        to_account_id: "",
+        amount: ""
+    }]);
+
+    async function submit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (lines.some((line) =>
+            line.from_account_id !== "" &&
+            line.to_account_id !== "" &&
+            line.from_account_id === line.to_account_id
+        )) {
+            alert("移動元Accountと移動先Accountは同じにできません");
+            return;
+        }
+
+        const { data: entry, error: entryError } = await supabase
+            .from("journal_entries")
+            .insert({occurred_on, summary})
+            .select("id")
+            .single();
+        if (entryError) {
+            alert(`submitError: ${entryError.message}`);
+            return;
+        }
+
+        await Promise.all(lines.map(async (line) => {
+            const { from_account_id, to_account_id, amount } = line;
+            const description = line.description === "" ? summary : line.description;
+            const { error: transactionLinesError } = await supabase
+                .from("transaction_lines")
+                .insert({
+                    journal_entry_id: entry.id,
+                    description,
+                    amount: Number(amount),
+                    from_account_id: Number(from_account_id),
+                    to_account_id: Number(to_account_id)
+                });
+            if (transactionLinesError) {
+                alert(`submitError: ${transactionLinesError.message}`);
+            }
+        }));
+
+        setLines([{
+            description: "",
+            card_id: "",
+            from_account_id: "",
+            to_account_id: "",
+            amount: ""
+        }]);
+        await onCreated();
+    }
+
+        // if (from_account_id === to_account_id) {
+        //     alert("移動元Accountと移動先Accountは同じにできません");
+        //     return;
+        // }
+
+
 
     return (
         <form
@@ -143,103 +243,45 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
             </select>
 
             <input
-                value={description}
-                onChange={(event) =>
-                    setDescription(event.target.value)
-                }
-                placeholder="摘要"
+                type="text"
+                value={summary}
+                onChange={(event) => setSummary(event.target.value)}
+                placeholder="概要"
                 required
                 className="w-full rounded border px-3 py-2"
             />
 
-            {/* <label className="block text-sm font-medium text-gray-700">
-                Account
-            </label> */}
-            <select
-                value={card_id}
-                onChange={(event) => {
-                    const value = event.target.value;
-                    if (value === "") {
-                        setCardId("");
-                        setFromAccountId(1); // 財布
-                    } else {
-                        setCardId(Number(value));
-                        setFromAccountId(Number(value));
-                    }
-                }}
-                className="w-full rounded border px-3 py-2"
-            >
-                <option value="">現金払い</option>
-                {cards.map((card) => (
-                    <option
-                        key={card.id}
-                        value={card.payment_account_id}
-                    >
-                        {card.name}
-                    </option>
-                ))}
-            </select>
-
+            {lines.map((line, index) => (
+                <TransactionLineForm
+                    key={index}
+                    accounts={accounts}
+                    cards={cards}
+                    transaction_type={transaction_type}
+                    line={line}
+                    onChange={(updatedLine) => {
+                        const newLines = [...lines];
+                        newLines[index] = updatedLine;
+                        setLines(newLines);
+                    }}
+                />
+            ))}
+            
             <div className="grid grid-cols-2 gap-3">
-                <select
-                    value={fromAccountId}
-                    onChange={(event) => setFromAccountId(Number(event.target.value))}
-                    required
-                    className="rounded border px-3 py-2"
+                <button
+                    type="button"
+                    onClick={() => setLines([...lines, {description: "", card_id: "", from_account_id: "", to_account_id: "", amount: ""}])}
+                    className="rounded border bg-black px-4 py-2 text-white"
                 >
-                    <option value="">
-                        移動元Account
-                    </option>
-                    {getFromAccountOptions().map((account) => (
-                        <option
-                            key={account.id}
-                            value={account.id}
-                        >
-                            {account.name}
-                        </option>
-                    ))}
-                </select>
-
-                <select
-                    value={toAccountId}
-                    onChange={(event) => setToAccountId(Number(event.target.value))}
-                    required
-                    className="rounded border px-3 py-2"
+                    取引を追加
+                </button>
+                <button
+                    type="submit"
+                    className="rounded border bg-black px-4 py-2 text-white"
                 >
-                    <option value="">
-                        移動先Account
-                    </option>
-                    {getToAccountOptions().map((account) => (
-                        <option
-                            key={account.id}
-                            value={account.id}
-                        >
-                            {account.name}
-                        </option>
-                    ))}
-                </select>
+                    取引を登録
+                </button>
+                
             </div>
-
-            <input
-                type="number"
-                min="1"
-                step="1"
-                value={amount}
-                onChange={(event) => {
-                    const value = event.target.value;
-                    setAmount(value === "" ? "" : Number(value));
-                }}
-                placeholder="金額"
-                required
-                className="w-full rounded border px-3 py-2"
-            />
-
-            <button
-                type="submit"
-                className="rounded bg-black px-4 py-2 text-white"
-            >
-                取引を登録
-            </button>
         </form>
     );
 }

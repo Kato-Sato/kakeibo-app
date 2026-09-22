@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { loadAccounts, Account } from "@/lib/accounts";
+import { loadAccounts, AccountDetail } from "@/lib/accounts";
 import { supabase } from "@/lib/supabase";
 
 type MonthlyEntry = {
@@ -12,7 +12,7 @@ type MonthlyEntry = {
 };
 
 export function MonthlyEntries({account_type}: { account_type: "income" | "expense" }) {
-    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [accounts, setAccounts] = useState<AccountDetail[]>([]);
     const [entries, setEntries] = useState<MonthlyEntry[]>([]);
 
     async function loadEntries() {

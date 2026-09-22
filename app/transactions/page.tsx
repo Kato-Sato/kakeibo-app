@@ -43,7 +43,7 @@ export default function TransactionsPage() {
                     }}
                 />
 
-                <table>
+                <table className="w-full divide-y rounded border">
                     <thead>
                         <tr>
                             <th>日付</th>
@@ -85,7 +85,60 @@ export default function TransactionsPage() {
                                     type = "カード支出";
                                     category = to_account;
                                     to_account = "";
-                                    card = from_account;
+                                    card = from_account;  // カード名を表示させたい
+                                } else if (from_account_type === "liability" && to_account_type === "asset") {
+                                    type = "借入";
+                                    category = from_account;
+                                    from_account = "";
+                                    card = "";
+                                } else if (from_account_type === "asset" && to_account_type === "liability") {
+                                    type = "返済";
+                                    category = to_account;
+                                    to_account = "";
+                                } else {
+                                    type = "その他";
+                                    category = "その他";
+                                }
+                                return (
+                                    <tr key={entry.id} className="rounded border p-4">
+                                        <td>{entry.occurred_on}</td>
+                                        <td>{type}</td>
+                                        <td>{entry.summary}</td>
+                                        <td>{Math.abs(amount)}</td>
+                                        <td>{card}</td>
+                                        <td>{category}</td>
+                                        <td>{from_account}</td>
+                                        <td>{to_account}</td>
+                                    </tr>
+                                );
+                            } else if (len >= 2) {
+                                const transactionLines = entry.transaction_lines;
+                                console.log("transactionLines", transactionLines);
+                                const total_amount = transactionLines.reduce((sum, line) => sum + line.amount, 0);
+
+                                const from_account_type = (new Set(transactionLines.map(line => line.from_account?.account_type))).size === 1 ? transactionLines[0].from_account?.account_type : "sundry";
+                                const to_account_type = (new Set(transactionLines.map(line => line.to_account?.account_type))).size === 1 ? transactionLines[0].to_account?.account_type : "sundry";
+                                let card = "";
+                                let from_account = (new Set(transactionLines.map(line => line.from_account?.name))).size === 1 ? transactionLines[0].from_account?.name ?? "不明" : "諸口";
+                                let to_account = (new Set(transactionLines.map(line => line.to_account?.name))).size === 1 ? transactionLines[0].to_account?.name ?? "不明" : "諸口";
+                                let type = "";
+                                let category = "";
+                                if (from_account_type === "asset" && to_account_type === "expense") {
+                                    type = "支出";
+                                    category = to_account;
+                                    to_account = "";
+                                } else if (from_account_type === "income" && to_account_type === "asset") {
+                                    type = "収入";
+                                    category = from_account;
+                                    from_account = "";
+                                } else if (from_account_type === "asset" && to_account_type === "asset") {
+                                    type = "振替";
+                                    category = `振替`; // とりあえず振替
+                                } else if (from_account_type === "liability" && to_account_type === "expense") {
+                                    type = "カード支出";
+                                    category = to_account;
+                                    to_account = "";
+                                    card = from_account;  // カード口座ではなくカード名を表示させたい
                                 } else if (from_account_type === "liability" && to_account_type === "asset") {
                                     type = "借入";
                                     category = from_account;
@@ -102,26 +155,14 @@ export default function TransactionsPage() {
                                     <tr key={entry.id} className="rounded border p-4">
                                         <td>{entry.occurred_on}</td>
                                         <td>{type}</td>
-                                        <td>{entry.description}</td>
-                                        <td>{Math.abs(amount)}</td>
+                                        <td>{entry.summary}</td>
+                                        <td>{total_amount}</td>
                                         <td>{card}</td>
                                         <td>{category}</td>
                                         <td>{from_account}</td>
                                         <td>{to_account}</td>
                                     </tr>
-                                );
-                            } else if (len >= 3) {
-                                return entry.postings.map((posting) => (
-                                    <tr key={entry.id} className="rounded border p-4">
-                                        <td>{entry.occurred_on}</td>
-                                        <td>{entry.description}</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                ));
+                                )
                             }
                         })}
                     </tbody>
