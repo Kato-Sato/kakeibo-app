@@ -38,7 +38,7 @@ export default function TransactionsPage() {
                         try {
                             setEntries(await loadEntries());
                         } catch (error) {
-                            alert(error instanceof Error ? error.message : String(error));
+                            alert(`onCreatedError: ${error instanceof Error ? error.message : String(error)}`);
                         }
                     }}
                 />

@@ -22,7 +22,7 @@ export default function HomePage() {
             });
 
         if (error) {
-            alert(error.message);
+            alert(`addAccountError: ${error.message}`);
             return;
         }
 

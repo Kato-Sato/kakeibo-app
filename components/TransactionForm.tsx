@@ -55,6 +55,24 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
             return;
         }
 
+        const { error: transactionLinesError } = await supabase
+            .from("transaction_lines")
+            .insert({
+                journal_entry_id: entry.id,
+                description,
+                amount: Number(amount),
+                from_account_id: Number(fromAccountId),
+                to_account_id: Number(toAccountId)
+            })
+        if (transactionLinesError) {
+            /*
+             * transactionLine登録に失敗するとJournalEntryだけ残る。
+             * これは試作上の一時的な制限。
+             */
+            alert(transactionLinesError.message);
+            return;
+        }
+
         setDescription("");
         setAmount("");
         await onCreated();
