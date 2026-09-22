@@ -111,7 +111,7 @@ export default function TransactionsPage() {
                                         <td>{to_account}</td>
                                     </tr>
                                 );
-                            } else {
+                            } else if (len >= 2) {
                                 const transactionLines = entry.transaction_lines;
                                 console.log("transactionLines", transactionLines);
                                 const total_amount = transactionLines.reduce((sum, line) => sum + line.amount, 0);
