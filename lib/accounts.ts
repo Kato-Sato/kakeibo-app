@@ -4,15 +4,18 @@ export type Account = {
     id: number;
     name: string;
     account_type: string;
+};
+
+export type AccountDetail = Account & {
     parent_account_id: number | null;
     sort_order: number;
-};
+}
 
 export type AccountBalance = Account & {
     balance: number;
 };
 
-export const today = "2026-09-18";
+export const today = "3000-01-01";
 
 export async function loadAccounts() {
     const { data, error } = await supabase
@@ -23,7 +26,7 @@ export async function loadAccounts() {
         alert(`loadAccountsError: ${error.message}`);
         return [];
     }
-    return (data as Account[]) ?? [];
+    return (data as AccountDetail[]) ?? [];
 }
 
 export async function loadAccountBalances(date: string) {
