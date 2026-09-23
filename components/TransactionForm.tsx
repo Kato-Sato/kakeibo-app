@@ -137,7 +137,16 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        
+
+        if (lines.some((line) =>
+            line.from_account_id !== "" &&
+            line.to_account_id !== "" &&
+            line.from_account_id === line.to_account_id
+        )) {
+            alert("移動元Accountと移動先Accountは同じにできません");
+            return;
+        }
+
         const { data: entry, error: entryError } = await supabase
             .from("journal_entries")
             .insert({occurred_on, summary})
@@ -148,8 +157,8 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
             return;
         }
 
-        lines.forEach(async (line) => {
-            const { card_id, from_account_id, to_account_id, amount } = line;
+        await Promise.all(lines.map(async (line) => {
+            const { from_account_id, to_account_id, amount } = line;
             const description = line.description === "" ? summary : line.description;
             const { error: transactionLinesError } = await supabase
                 .from("transaction_lines")
@@ -162,13 +171,8 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
                 });
             if (transactionLinesError) {
                 alert(`submitError: ${transactionLinesError.message}`);
-                return;
-            /*
-             * transactionLine登録に失敗するとJournalEntryだけ残る。
-             * これは試作上の一時的な制限。
-             */
             }
-        })
+        }));
 
         setLines([{
             description: "",
