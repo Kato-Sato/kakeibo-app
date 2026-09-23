@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { TransactionType, transaction_type_conditions } from "@/lib/entries";
 import { Account } from "@/lib/accounts";
 import { Card } from "@/lib/cards";
 
-type TransactionType = "expense" | "income" | "transfer" | "borrow" | "repay";
 
 type TransactionFormProps = {
     accounts: Account[];
@@ -29,34 +29,10 @@ type TransactionLineFormProps = {
 
 function TransactionLineForm({accounts, cards, transaction_type, line, onChange}:
     {accounts: Account[]; cards: Card[]; transaction_type: TransactionType; line: Line; onChange: (line: Line) => void}) {
-    function getFromAccountOptions() {
-        if (transaction_type === "expense") {
-            return accounts.filter((account) => ["asset", "liability"].includes(account.account_type));
-        }else if (transaction_type === "income") {
-            return accounts.filter((account) => account.account_type === "income");
-        }else if (transaction_type === "transfer") {
-            return accounts.filter((account) => account.account_type === "asset");
-        }else if (transaction_type === "borrow") {
-            return accounts.filter((account) => account.account_type === "liability");
-        }else if (transaction_type === "repay") {
-            return accounts.filter((account) => account.account_type === "asset");
-        }
-        return [];
-    }
-    function getToAccountOptions() {
-        if (transaction_type === "expense") {
-            return accounts.filter((account) => account.account_type === "expense");
-        }else if (transaction_type === "income") {
-            return accounts.filter((account) => account.account_type === "asset");
-        }else if (transaction_type === "transfer") {
-            return accounts.filter((account) => account.account_type === "asset");
-        }else if (transaction_type === "borrow") {
-            return accounts.filter((account) => account.account_type === "asset");
-        }else if (transaction_type === "repay") {
-            return accounts.filter((account) => account.account_type === "liability");
-        }
-        return [];
-    }
+    const condition = transaction_type_conditions[transaction_type];
+    const from_account_options = accounts.filter((account) => account.account_type === condition.from);
+    const to_account_options = accounts.filter((account) => account.account_type === condition.to);
+
     return (
         <div className="grid grid-cols-5 gap-3">
             <input
@@ -102,7 +78,7 @@ function TransactionLineForm({accounts, cards, transaction_type, line, onChange}
                 <option value="">
                     移動元Account
                 </option>
-                {getFromAccountOptions().map((account) => (
+                {from_account_options.map((account) => (
                     <option
                         key={account.id}
                         value={account.id}
@@ -120,7 +96,7 @@ function TransactionLineForm({accounts, cards, transaction_type, line, onChange}
                 <option value="">
                     移動先Account
                 </option>
-                {getToAccountOptions().map((account) => (
+                {to_account_options.map((account) => (
                     <option
                         key={account.id}
                         value={account.id}
@@ -148,7 +124,7 @@ function TransactionLineForm({accounts, cards, transaction_type, line, onChange}
 
 export function TransactionForm({accounts, cards, onCreated}: TransactionFormProps) {
     const [occurred_on, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
-    const [transaction_type, setTransactionType] = useState<TransactionType>("expense");
+    const [transaction_type, setTransactionType] = useState<TransactionType>("支出");
     const [summary, setSummary] = useState<string>("");
     const [lines, setLines] = useState<Line[]>([{
         description: "",
@@ -157,6 +133,7 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
         to_account_id: "",
         amount: ""
     }]);
+    const transaction_type_keys = Object.keys(transaction_type_conditions);
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -235,11 +212,11 @@ export function TransactionForm({accounts, cards, onCreated}: TransactionFormPro
                 required
                 className="w-full rounded border px-3 py-2"
             >
-                <option value="expense">支出</option>
-                <option value="income">収入</option>
-                <option value="transfer">振替</option>
-                <option value="borrow">借入</option>
-                <option value="repay">返済</option>
+                {transaction_type_keys.map((key, index) => (
+                    <option key={index} value={key}>
+                        {key}
+                    </option>
+                ))}
             </select>
 
             <input

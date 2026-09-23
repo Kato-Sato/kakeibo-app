@@ -1,9 +1,11 @@
 import { supabase } from "@/lib/supabase";
 
+export type AccountType = "asset" | "liability" | "income" | "expense";
+
 export type Account = {
     id: number;
     name: string;
-    account_type: string;
+    account_type: AccountType;
 };
 
 export type AccountDetail = Account & {
