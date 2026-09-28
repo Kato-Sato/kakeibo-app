@@ -44,7 +44,7 @@ export default function TransactionsPage() {
                     }}
                 />
 
-                <TransactionList filter={{involved_account_id: 1}}/>
+                <TransactionList filter={{}}/>
             </section>
         </div>
     );
