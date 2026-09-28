@@ -18,14 +18,56 @@ export type TransactionType = "支出" | "収入" | "振替" | "カード支出"
 
 export const transaction_type_conditions: Record<
     TransactionType,
-    { from: AccountType; to: AccountType }
+    { 
+        from: AccountType;
+        to: AccountType;
+        getCategory: (from: string, to: string) => string;
+        hideFrom: boolean;
+        hideTo: boolean
+    }
 > = {
-    支出: { from: "asset", to: "expense" },
-    収入: { from: "income", to: "asset" },
-    振替: { from: "asset", to: "asset" },
-    カード支出: { from: "liability", to: "expense" },
-    借入: { from: "liability", to: "asset" },
-    返済: { from: "asset", to: "liability" }
+    支出: {
+        from: "asset",
+        to: "expense",
+        getCategory: (_, to) => to,
+        hideFrom: false,
+        hideTo: true
+    },
+    収入: {
+        from: "income",
+        to: "asset",
+        getCategory: (from, _) => from,
+        hideFrom: true,
+        hideTo: false
+    },
+    振替: {
+        from: "asset",
+        to: "asset",
+        getCategory: (from, to) => "",
+        hideFrom: false,
+        hideTo: false
+    },
+    カード支出: {
+        from: "liability",
+        to: "expense",
+        getCategory: (_, to) => to,
+        hideFrom: true,
+        hideTo: true
+    },
+    借入: {
+        from: "liability",
+        to: "asset",
+        getCategory: (from, _) => from,
+        hideFrom: true,
+        hideTo: true
+    },
+    返済: {
+        from: "asset",
+        to: "liability",
+        getCategory: (_, to) => to,
+        hideFrom: true,
+        hideTo: true
+    }
 };
 
 export type TransactionLine = {
