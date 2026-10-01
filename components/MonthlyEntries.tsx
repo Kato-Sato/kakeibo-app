@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { loadAccounts, AccountDetail } from "@/lib/accounts";
-import { supabase } from "@/lib/supabase";
+import { loadAccounts, Account, AccountType, AccountDetail } from "@/lib/accounts";
+import TransactionList from "@/components/TransactionList";
+import { TransactionType, JournalEntry } from "@/lib/entries";
 
-type MonthlyEntry = {
+export type MonthlyEntry = {
     month: string;
     account_id: number;
     account_name: string;
@@ -11,40 +12,49 @@ type MonthlyEntry = {
     amount: number;
 };
 
-export function MonthlyEntries({account_type}: { account_type: "income" | "expense" }) {
-    const [accounts, setAccounts] = useState<AccountDetail[]>([]);
-    const [entries, setEntries] = useState<MonthlyEntry[]>([]);
+export type SummaryPageType = "支出" | "収入" | "債務";
 
-    async function loadEntries() {
-        const { data, error } = await supabase
-            .from("monthly_entries")
-            .select('*')
-        if (error) throw error;
-        return data ?? []
+export const summary_items: Record<
+    SummaryPageType,
+    {
+        transaction_types: TransactionType[];
+        account_type: AccountType;  // 必要？？
     }
+> = {
+    支出: {
+        transaction_types: ["支出", "カード支出"],
+        account_type: "expense"
+    },
+    収入: {
+        transaction_types: ["収入"],
+        account_type: "income"
+    },
+    債務: {
+        transaction_types: ["借入", "返済"],
+        account_type: "liability"
+    }
+};
 
-    useEffect(() => {
-        const load = async () => {
-            const [accounts, entries] = await Promise.all([
-                loadAccounts(),
-                loadEntries()
-            ]);
-            setAccounts(accounts);
-            setEntries(entries);
-        }
-        void load().catch((error) => alert(error instanceof Error ? error.message : String(error)));
-    }, []);
+export default function MonthlyEntries({summary_page_type, monthly_entries, accounts}: {
+    summary_page_type: SummaryPageType,
+    monthly_entries: MonthlyEntry[],
+    accounts: AccountDetail[]
+}) {
+    const [highlighted_month, setHighlightedMonth] = useState<string | null>(null);
+    const [highlighted_account, setHighlightedAccount] = useState<Account | null>(null);
+
+    const {transaction_types, account_type} = summary_items[summary_page_type];
 
     const months = Array.from(
         new Set(
-            entries.map(
-                (entry) => entry.month,
-            ),
-        ),
+            monthly_entries.map(
+                (entry) => entry.month
+            )
+        )
     ).sort((a, b) => b.localeCompare(a));
 
     const amountMap = new Map<string, number>();
-    for(const entry of entries) {
+    for(const entry of monthly_entries) {
         const key = `${entry.month}:${entry.account_id}`;
         amountMap.set(key, entry.amount);
     }
@@ -58,7 +68,7 @@ export function MonthlyEntries({account_type}: { account_type: "income" | "expen
         <div>
             <section className="space-y-4">
                 <h2 className="text-xl font-semibold">
-                    {account_type === "income" ? "収入" : "支出"}
+                    {summary_page_type}
                 </h2>
 
                 <table>
@@ -87,7 +97,7 @@ export function MonthlyEntries({account_type}: { account_type: "income" | "expen
                                         if (account.account_type === account_type && account.parent_account_id === null) {
                                             return (
                                                 <td key={account.id} className="border p-2">
-                                                    {getAmount(month, account.id) * (account_type === "income" ? -1 : 1)}
+                                                    {getAmount(month, account.id) /* あとで修正*/ }
                                                 </td>
                                             );
                                         }
@@ -98,6 +108,11 @@ export function MonthlyEntries({account_type}: { account_type: "income" | "expen
                         })}
                     </tbody>
                 </table>
+                <TransactionList filter={{
+                    from_date: highlighted_month ?? undefined,
+                    to_date: highlighted_month ? new Date(new Date(highlighted_month).getFullYear(), new Date(highlighted_month).getMonth() + 1, 1).toISOString().split("T")[0] : undefined,
+                    involved_account_id: highlighted_account?.id ?? undefined
+                }} />
             </section>
         </div>
     );

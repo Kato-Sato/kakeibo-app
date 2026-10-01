@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { loadEntries, Filter, JournalEntry } from "@/lib/entries";
 import { JournalEntry as JournalEntryComponent } from "@/components/JournalEntry";
 
-export function TransactionList({filter}: {filter: Filter}) { // refreshKey 実装
+export default function TransactionList({filter}: {filter: Filter}) { // refreshKey 実装
     const [entries, setEntries] = useState<JournalEntry[]>([]);
 
     useEffect(() => {

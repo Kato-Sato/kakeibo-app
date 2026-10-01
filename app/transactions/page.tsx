@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { TransactionForm } from "@/components/TransactionForm";
-import { TransactionList } from "@/components/TransactionList";
+import TransactionList from "@/components/TransactionList";
 import { loadAccounts, Account } from "@/lib/accounts";
 import { loadEntries, JournalEntry } from "@/lib/entries";
 import { loadCards, Card } from "@/lib/cards";

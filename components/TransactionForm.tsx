@@ -13,16 +13,13 @@ type TransactionFormProps = {
 };
 
 type Line = {
-        description: string;
-        card_id: number | "";
-        from_account_id: number | "";
-        to_account_id: number | "";
-        amount: number | "";
-    }
-
-type TransactionLineFormProps = {
-    line: Line
+    description: string;
+    card_id: number | "";
+    from_account_id: number | "";
+    to_account_id: number | "";
+    amount: number | "";
 }
+
 
 
 // null check
