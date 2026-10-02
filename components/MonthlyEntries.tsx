@@ -1,8 +1,5 @@
-"use client";
-import { useEffect, useState } from "react";
-import { loadAccounts, Account, AccountType, AccountDetail } from "@/lib/accounts";
-import TransactionList from "@/components/TransactionList";
-import { TransactionType, JournalEntry } from "@/lib/entries";
+import { AccountType, Account } from "@/lib/accounts";
+import { TransactionType } from "@/lib/entries";
 
 export type MonthlyEntry = {
     month: string;
@@ -35,14 +32,12 @@ export const summary_items: Record<
     }
 };
 
-export default function MonthlyEntries({summary_page_type, monthly_entries, accounts}: {
+export default function MonthlyEntries({summary_page_type, monthly_entries, accounts, onSelect}: {
     summary_page_type: SummaryPageType,
     monthly_entries: MonthlyEntry[],
-    accounts: AccountDetail[]
+    accounts: Account[],
+    onSelect: (month: string, account: Account) => void
 }) {
-    const [highlighted_month, setHighlightedMonth] = useState<string | null>(null);
-    const [highlighted_account, setHighlightedAccount] = useState<Account | null>(null);
-
     const {transaction_types, account_type} = summary_items[summary_page_type];
 
     const months = Array.from(
@@ -96,7 +91,7 @@ export default function MonthlyEntries({summary_page_type, monthly_entries, acco
                                     {accounts.map((account) => {
                                         if (account.account_type === account_type && account.parent_account_id === null) {
                                             return (
-                                                <td key={account.id} className="border p-2">
+                                                <td key={account.id} className="border p-2" onClick={() => onSelect(month, account)}>
                                                     {getAmount(month, account.id) /* あとで修正*/ }
                                                 </td>
                                             );
@@ -108,11 +103,6 @@ export default function MonthlyEntries({summary_page_type, monthly_entries, acco
                         })}
                     </tbody>
                 </table>
-                <TransactionList filter={{
-                    from_date: highlighted_month ?? undefined,
-                    to_date: highlighted_month ? new Date(new Date(highlighted_month).getFullYear(), new Date(highlighted_month).getMonth() + 1, 1).toISOString().split("T")[0] : undefined,
-                    involved_account_id: highlighted_account?.id ?? undefined
-                }} />
             </section>
         </div>
     );

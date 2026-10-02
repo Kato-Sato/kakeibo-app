@@ -9,13 +9,7 @@ export function HeaderMenu() {
                     <a href="/transactions" className="hover:underline">取引</a>
                 </li>
                 <li className="inline-block mr-4">
-                    <a href="/expenses" className="hover:underline">支出</a>
-                </li>
-                <li className="inline-block mr-4">
-                    <a href="/incomes" className="hover:underline">収入</a>
-                </li>
-                <li className="inline-block mr-4">
-                    <a href="/liabilities" className="hover:underline">債務</a>
+                    <a href="/monthly" className="hover:underline">月次</a>
                 </li>
             </ul>
         </header>
