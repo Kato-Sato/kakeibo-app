@@ -6,12 +6,9 @@ export type Account = {
     id: number;
     name: string;
     account_type: AccountType;
-};
-
-export type AccountDetail = Account & {
     parent_account_id: number | null;
     sort_order: number;
-}
+};
 
 export type AccountBalance = Account & {
     balance: number;
@@ -28,7 +25,7 @@ export async function loadAccounts() {
         alert(`loadAccountsError: ${error.message}`);
         return [];
     }
-    return (data as AccountDetail[]) ?? [];
+    return (data as Account[]) ?? [];
 }
 
 export async function loadAccountBalances(date: string) {

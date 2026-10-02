@@ -51,7 +51,7 @@ export const transaction_type_conditions: Record<
         from: "liability",
         to: "expense",
         getCategory: (_, to) => to,
-        hideFrom: true,
+        hideFrom: false,
         hideTo: true
     },
     借入: {

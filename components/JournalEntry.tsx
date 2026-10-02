@@ -1,14 +1,13 @@
-import type { JournalEntry, TransactionType } from "@/lib/entries";
-import { transaction_type_conditions } from "@/lib/entries";
+import { transaction_type_conditions, JournalEntry, TransactionType } from "@/lib/entries";
 
-export function JournalEntry({ entry }: { entry: JournalEntry }) {
+export function JournalEntryComponent({ entry }: { entry: JournalEntry }) {
     const transaction_lines = entry.transaction_lines;
     const total_amount = transaction_lines.reduce((sum, line) => sum + line.amount, 0);
     const len = transaction_lines.length;
     // 続き この辺りの調整 summaryの表示
     return (
         <div key={entry.id}>
-            <div className="grid grid-cols-[1fr_80px_80px_80px_80px_80px_80px] items-center rounded border px-4 py-3">
+            {(len > 0) && (<div className="grid grid-cols-[1fr_80px_80px_80px_80px_80px_80px] items-center rounded border px-4 py-3">
                 <div>{entry.occurred_on}</div>
                 <div></div> {/* trasactiontype */}
                 <div>{entry.summary}</div>
@@ -16,7 +15,7 @@ export function JournalEntry({ entry }: { entry: JournalEntry }) {
                 <div></div> {/* fromaccount */}
                 <div></div> {/* toaccount */}
                 <div className="text-right">{total_amount}</div>
-            </div>
+            </div>)}
             <div>
                 {transaction_lines.map((line) => {
                     const from_account_type = line.from_account?.account_type ?? "asset";
@@ -39,7 +38,7 @@ export function JournalEntry({ entry }: { entry: JournalEntry }) {
                     };
                     type = matched_type ?? "その他";
                     category = condition.getCategory(from_account, to_account);
-                    
+
                     return (
                         <div
                             key={line.id}
