@@ -1,0 +1,74 @@
+"use client";
+import { useState } from "react";
+import { createAccount } from "@/repositories/accounts";
+import { NewAccount, AccountType, ACCOUNT_TYPES, ACCOUNT_TYPE_LABELS } from "@/domain/account";
+import { draftToAccount, type AccountDraft } from "./draft";
+import { toError } from "@/lib/errors";
+
+function createEmptyDraft(): AccountDraft {
+    return {
+        name: "",
+        accountType: "asset",
+        parentAccountId: null,
+        sortOrder: 10,
+    };
+}
+
+export default function AccountForm({ onCreated }: { onCreated: () => void }) {
+    const [draft, setDraft] = useState<AccountDraft>(() => createEmptyDraft());
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        const result = draftToAccount({...draft});
+        if (!result.ok) {
+            setSubmitError(result.message);
+            return;
+        }
+
+        try {
+            await createAccount(result.value);
+            setDraft(createEmptyDraft());
+            setSubmitError(null);
+            onCreated();
+        } catch (err) {
+            setSubmitError(toError(err).message);
+        }
+    }
+
+    return (
+        <form
+            onSubmit={handleSubmit}
+            className="flex gap-2"
+        >
+            <input
+                value={draft.name}
+                onChange={(event) => setDraft({...draft, name: event.target.value})}
+                placeholder="口座名"
+                required
+                className="flex-1 rounded border px-3 py-2"
+            />
+{/* initial_balance の設定 */}
+            <select
+                value={draft.accountType}
+                onChange={(event) => setDraft({...draft, accountType: event.target.value as AccountType})}
+                className="rounded border px-3 py-2"
+            >
+                {ACCOUNT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                        {ACCOUNT_TYPE_LABELS[type]}
+                    </option>
+                ))}
+            </select>
+
+            <button
+                type="submit"
+                className="rounded bg-black px-4 py-2 text-white"
+            >
+                追加
+            </button>
+        </form>
+    );
+}

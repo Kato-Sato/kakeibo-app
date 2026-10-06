@@ -1,24 +1,20 @@
-"use client";
-import { useEffect, useState } from "react";
-import { loadEntries, Filter, JournalEntry } from "@/lib/entries";
-import { JournalEntryComponent } from "@/components/JournalEntry";
+import { useAccounts } from "@/hooks/useAccounts";
+import { useTransactions } from "@/hooks/useTransactions";
+import type { Transaction, TransactionFilter } from "@/domain/transaction";
 
-export default function TransactionList({filter}: {filter: Filter}) { // refreshKey 実装
-    const [entries, setEntries] = useState<JournalEntry[]>([]);
+import TransactionC from "@/components/Transaction";
 
-    useEffect(() => {
-        const load = async () => {
-            const [entries] = await Promise.all([
-                loadEntries(filter)
-            ]);
-            setEntries(entries);
-        }
-        void load().catch((error) => alert(error instanceof Error ? error.message : String(error)));
-    }, [filter]);
+export default function TransactionList({
+    transactions,
+    accountById
+}: {
+    transactions: Transaction[];
+    accountById: ReturnType<typeof useAccounts>["accountById"];
+}) {
     return (
         <div className="space-y-2">
-            {entries.map((entry) => {
-                return <JournalEntryComponent key={entry.id} entry={entry} />;
+            {transactions.map((transaction) => {
+                return <TransactionC key={transaction.id} transaction={transaction} accountById={accountById} />;
             })}
         </div>
     );

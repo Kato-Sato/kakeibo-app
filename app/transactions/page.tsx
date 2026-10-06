@@ -1,30 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
-import { TransactionForm } from "@/components/TransactionForm";
+import { useState } from "react";
+import TransactionForm from "@/components/TransactionForm/TransactionForm";
 import TransactionList from "@/components/TransactionList";
-import { loadAccounts, Account } from "@/lib/accounts";
-import { loadEntries, JournalEntry } from "@/lib/entries";
-import { loadCards, Card } from "@/lib/cards";
+import { useAccounts } from "@/hooks/useAccounts";
+import { useTransactions } from "@/hooks/useTransactions";
 
-export default function TransactionsPage() {
-    const [accounts, setAccounts] = useState<Account[]>([]);
-    const [entries, setEntries] = useState<JournalEntry[]>([]);
-    const [cards, setCards] = useState<Card[]>([]);
-
-    useEffect(() => {
-        const load = async () => {
-            const [accounts, entries, cards] = await Promise.all([
-                loadAccounts(),
-                loadEntries(),
-                loadCards()
-            ]);
-            setAccounts(accounts);
-            setEntries(entries);
-            setCards(cards);
-        }
-        void load().catch((error) => alert(error instanceof Error ? error.message : String(error)));
-    }, []);
-
+export default function TransactionsPage() {    
+    const accounts = useAccounts();
+    const transactions = useTransactions({});
     return (
         <div>
             <section className="space-y-4">
@@ -32,19 +15,9 @@ export default function TransactionsPage() {
                     取引一覧
                 </h2>
 
-                <TransactionForm
-                    accounts={accounts}
-                    cards={cards}
-                    onCreated={async () => {
-                        try {
-                            setEntries(await loadEntries());
-                        } catch (error) {
-                            alert(`onCreatedError: ${error instanceof Error ? error.message : String(error)}`);
-                        }
-                    }}
-                />
+                <TransactionForm accounts={accounts.data ?? []} onCreated={() => transactions.reload()}/>
 
-                <TransactionList filter={{}}/>
+                <TransactionList transactions={transactions.data ?? []} accountById={accounts.accountById} filter={{}}/>
             </section>
         </div>
     );
