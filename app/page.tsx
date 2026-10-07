@@ -1,14 +1,20 @@
 "use client";
+import { useMemo } from "react";
 import AccountBalanceList from "@/components/AccountBalanceList";
 import AccountForm from "@/components/AccountForm/AccountForm";
 import { AsyncView } from "@/components/AsyncView";
-import { useAccountBalances } from "@/hooks/useAccounts";
+import { useAccounts, useAccountBalances } from "@/hooks/useAccounts";
 import { today } from "@/domain/date"
-import { isAsset } from "@/domain/account";
+import { isAsset, buildAccountTree, buildBalanceTree } from "@/domain/account";
 
 export default function HomePage() {
-    const accountBalances = useAccountBalances(today);
-    const assetBalances = accountBalances.data?.filter(isAsset) ?? [];
+    const accounts = useAccounts();
+    const balances = useAccountBalances(today);
+    const assetTree = useMemo(() => {
+        const balanceById = new Map((balances.data ?? []).map((b) => [b.id, b.balance]));
+        const assets = (accounts.data ?? [])//.filter(isAsset);
+        return buildBalanceTree(buildAccountTree(assets), balanceById);
+    }, [accounts.data, balances.data]);
     return (
         <main>
             <h1 className="text-2xl font-bold">
@@ -19,14 +25,14 @@ export default function HomePage() {
                 <h2 className="text-xl font-semibold">
                     Account追加
                 </h2>
-                <AccountForm onCreated={() => {accountBalances.reload()}}/>
+                <AccountForm accounts={accounts.data ?? []} onCreated={() => {accounts.reload(); balances.reload(); }}/>
             </section>
 
             <section className="space-y-4">
                 <h2 className="text-xl font-semibold">
                     Account一覧
                 </h2>
-                <AccountBalanceList balances={assetBalances} />
+                <AccountBalanceList tree={assetTree} />
             </section>
         </main>
     );

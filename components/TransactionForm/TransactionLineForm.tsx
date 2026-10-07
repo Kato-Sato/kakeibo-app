@@ -1,5 +1,5 @@
-import { TransactionLineDraft } from "./draft";
-import { Account, AccountType } from "@/domain/account";
+import type { TransactionLineDraft } from "./draft";
+import type { Account } from "@/domain/account";
 
 export default function TransactionLineForm({line, fromAccountOptions, toAccountOptions, onChange}: {
     line: TransactionLineDraft;

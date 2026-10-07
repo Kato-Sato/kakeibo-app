@@ -1,6 +1,5 @@
 import { useAccounts } from "@/hooks/useAccounts";
-import { useTransactions } from "@/hooks/useTransactions";
-import type { Transaction, TransactionFilter } from "@/domain/transaction";
+import type { Transaction } from "@/domain/transaction";
 
 import TransactionC from "@/components/Transaction";
 

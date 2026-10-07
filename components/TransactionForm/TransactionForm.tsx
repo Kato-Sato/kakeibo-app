@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { NewTransaction, TransactionType, TRANSACTION_TYPE_RULES, TRANSACTION_TYPES, TRANSACTION_TYPE_LABELS, getAccountCandidates } from "@/domain/transaction";
-import { Account } from "@/domain/account";
+import { Account, buildAccountTree } from "@/domain/account";
 import TransactionLineForm from "./TransactionLineForm";
 import { TransactionDraft, TransactionLineDraft, draftToTransaction } from "./draft";
 import { createTransaction } from "@/repositories/transactions";
@@ -29,6 +29,9 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
     const [draft, setDraft] = useState<TransactionDraft>(() => createEmptyDraft());
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const accountTree = buildAccountTree(accounts);
+    
+    console.log("accountTree", accountTree);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -50,13 +53,14 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
     }
 
     const fromCandidates = useMemo(
-        () => getAccountCandidates(accounts, draft.type, "from"),
-        [accounts, draft.type],
+        () => getAccountCandidates(accountTree, draft.type, "from"),
+        [accountTree, draft.type],
     );
     const toCandidates = useMemo(
-        () => getAccountCandidates(accounts, draft.type, "to"),
-        [accounts, draft.type],
+        () => getAccountCandidates(accountTree, draft.type, "to"),
+        [accountTree, draft.type],
     );
+    console.log("fromCandidates", fromCandidates);
 
     return (
         <form

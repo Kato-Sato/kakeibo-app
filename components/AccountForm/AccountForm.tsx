@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createAccount } from "@/repositories/accounts";
-import { NewAccount, AccountType, ACCOUNT_TYPES, ACCOUNT_TYPE_LABELS } from "@/domain/account";
+import { Account, AccountType, ACCOUNT_TYPES, ACCOUNT_TYPE_LABELS, getAccountCandidates } from "@/domain/account";
 import { draftToAccount, type AccountDraft } from "./draft";
 import { toError } from "@/lib/errors";
 
@@ -14,10 +14,14 @@ function createEmptyDraft(): AccountDraft {
     };
 }
 
-export default function AccountForm({ onCreated }: { onCreated: () => void }) {
+export default function AccountForm({ accounts, onCreated }: { accounts: Account[]; onCreated: () => void }) {
     const [draft, setDraft] = useState<AccountDraft>(() => createEmptyDraft());
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const parentCandidates = useMemo(
+        () => getAccountCandidates(accounts, draft.accountType),
+        [accounts, draft.accountType]
+    );
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -59,6 +63,18 @@ export default function AccountForm({ onCreated }: { onCreated: () => void }) {
                 {ACCOUNT_TYPES.map((type) => (
                     <option key={type} value={type}>
                         {ACCOUNT_TYPE_LABELS[type]}
+                    </option>
+                ))}
+            </select>
+            <select
+                value={draft.parentAccountId ?? ""}
+                onChange={(event) => setDraft({...draft, parentAccountId: event.target.value ? Number(event.target.value) : null})}
+                className="rounded border px-3 py-2"
+            >
+                <option value="">親口座</option>
+                {parentCandidates.map((account) => (
+                    <option key={account.id} value={account.id}>
+                        {account.name}
                     </option>
                 ))}
             </select>

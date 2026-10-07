@@ -1,4 +1,5 @@
-import type { AccountType, Account } from "@/domain/account.ts";
+import type { AccountType, Account, AccountNode } from "@/domain/account.ts";
+import { isLeaf } from "@/domain/account";
 
 export const TRANSACTION_TYPE_LABELS = {
     expense: "支出",
@@ -46,11 +47,13 @@ export const TRANSACTION_TYPE_RULES = {
 // }
 
 export function getAccountCandidates(
-    accounts: Account[],
+    accountTree: AccountNode[],
     type: TransactionType,
     side: TransactionSide
 ): Account[] {
-    return accounts.filter((account) => isAccountAllowed(type, side, account));
+    const candidates = accountTree.filter((node) => isAccountAllowed(type, side, node));
+    const childCandidates = accountTree.flatMap(node => getAccountCandidates(node.children, type, side));
+    return [...candidates, ...childCandidates];
 }
 
 export function parseAmount(raw: string): number | null {
@@ -127,7 +130,7 @@ export type TransactionFilter = {
 export function isAccountAllowed(
     type: TransactionType,
     side: TransactionSide,
-    account: Account
+    account: AccountNode
 ): boolean {
-    return account.accountType === TRANSACTION_TYPE_RULES[type][side];
+    return (isLeaf(account) && account.accountType === TRANSACTION_TYPE_RULES[type][side]);
 }
