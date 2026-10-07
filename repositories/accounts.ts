@@ -10,7 +10,8 @@ type AccountRow = {
     sort_order: number | null;
 };
 
-type AccountBalanceRow = AccountRow & {
+type AccountBalanceRow = {
+    id: number;
     balance: number;
 };
 
@@ -37,23 +38,19 @@ export async function fetchAccountBalances(date: string): Promise<AccountBalance
         .rpc("get_account_balances", {target_date: date})
     ) as AccountBalanceRow[];
     return rows.map((row) => ({
-        ...toAccount(row),
+        id: row.id,
         balance: Number(row.balance),
     }));
 }
 
-export async function createAccount(input: NewAccount): Promise<Account> {
-    const row = unwrap(
+export async function createAccount(input: NewAccount): Promise<number> {
+    return unwrap(
         await supabase
-            .from("accounts")
-            .insert({
-                name: input.name,
-                account_type: input.accountType,
-                parent_account_id: input.parentAccountId,
-                sort_order: input.sortOrder,
+            .rpc("create_account", {
+                p_name: input.name,
+                p_account_type: input.accountType,
+                p_parent_account_id: input.parentAccountId,
+                p_sort_order: input.sortOrder,
             })
-            .select("id, name, account_type, parent_account_id, sort_order")
-            .single()
-    ) as AccountRow;
-    return toAccount(row);
+    );
 }

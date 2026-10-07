@@ -17,7 +17,7 @@ export default function TransactionsPage() {
 
                 <TransactionForm accounts={accounts.data ?? []} onCreated={() => transactions.reload()}/>
 
-                <TransactionList transactions={transactions.data ?? []} accountById={accounts.accountById} filter={{}}/>
+                <TransactionList transactions={transactions.data ?? []} accountById={accounts.accountById} />
             </section>
         </div>
     );

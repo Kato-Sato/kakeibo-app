@@ -1,6 +1,5 @@
-import { type Account } from "@/domain/account";
-import { type MonthlyAccountTotal, AccountMonth } from "@/domain/monthly";
-import { type ReportsType, REPORTS_TYPE_LABELS } from "@/domain/reports";
+import type { Account } from "@/domain/account";
+import type { MonthlyAccountTotal, AccountMonth } from "@/domain/reports";
 
 export default function ReportsTable({accounts, totals, onSelect}: {
     accounts: Account[]

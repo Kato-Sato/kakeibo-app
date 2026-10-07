@@ -5,8 +5,7 @@ import TransactionList from "@/components/TransactionList";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useMonthlyAccountTotals } from "@/hooks/useMonthlyAccountTotals";
-import type { AccountMonth } from "@/domain/monthly";
-import { type ReportsType } from "@/domain/reports";
+import type { AccountMonth, ReportsType } from "@/domain/reports";
 import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPES } from "@/domain/account";
 
 export default function ReportsPage() {
