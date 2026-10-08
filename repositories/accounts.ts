@@ -29,7 +29,8 @@ export async function fetchAccounts(): Promise<Account[]> {
     const rows = unwrap(await supabase
         .from("accounts")
         .select("id, name, account_type, parent_account_id, sort_order")
-        .order("id")
+        .order("account_type", { ascending: true })
+        .order("sort_order", { ascending: true })
     ) as AccountRow[];
     return rows.map(toAccount);
 }

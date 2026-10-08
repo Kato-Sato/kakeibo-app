@@ -1,11 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import { unwrap } from "@/lib/errors";
-import type { Transaction, TransactionLine, NewTransaction } from "@/domain/transaction";
+import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, TransactionFilter } from "@/domain/transaction";
+import type { TransactionGroup } from "@/domain/transactionGroup";
 
 
 type TransactionRow = {
     id: number;
     occurred_on: string;
+    type: string;
     summary: string;
     transaction_lines: {
         id: number;
@@ -13,15 +15,38 @@ type TransactionRow = {
         from_account_id: number;
         to_account_id: number;
         amount: number;
+        group_id: number | null;
     }[];
 };
 
-export async function fetchTransactions(): Promise<Transaction[]> {
+type TransactionLineDetailRow = {
+    id: number;
+    description: string;
+    from_account_id: number;
+    to_account_id: number;
+    transaction_id: number;
+    amount: number;
+    transaction_group_id: number | null;
+    transactions: {
+        occurred_on: string;
+        type: string;
+        summary: string;
+    };
+}
+
+type TransactionGroupRow = {
+    id: number;
+    description: string;
+    parent_group_id: number | null;
+}
+
+export async function fetchTransactions(filter: TransactionFilter): Promise<Transaction[]> {
     const query = supabase
         .from("transactions")
         .select(`
             id,
             occurred_on,
+            type,
             summary,
             transaction_lines (
                 id,
@@ -39,6 +64,7 @@ export async function fetchTransactions(): Promise<Transaction[]> {
     return rows.map((row) => ({
         id: row.id,
         occurredOn: row.occurred_on,
+        type: row.type as TransactionType,
         summary: row.summary,
         lines: row.transaction_lines.map((l) => ({
             id: l.id,
@@ -60,8 +86,53 @@ export async function createTransaction(input: NewTransaction): Promise<number> 
                 description: line.description,
                 from_account_id: line.fromAccountId,
                 to_account_id: line.toAccountId,
-                amount: line.amount,
+                amount: line.amount
             }))
         })
     );
+}
+
+
+export async function fetchTransactionLineDetails(filter: TransactionFilter): Promise<TransactionLineDetail[]> {
+    const rows = unwrap(await supabase
+        .from("transaction_lines")
+        .select(`
+            id,
+            description,
+            from_account_id,
+            to_account_id,
+            transaction_id,
+            amount,
+            transaction_group_id,
+            transactions (
+                occurred_on,
+                type,
+                summary
+            )
+        `)
+        .order("occurred_on", {ascending: false, referencedTable: "transactions"})
+    ) as unknown as TransactionLineDetailRow[];
+    return rows.map((row) => ({
+        transactionId: row.transaction_id,
+        occurredOn: row.transactions.occurred_on,
+        type: row.transactions.type as TransactionType,
+        summary: row.transactions.summary,
+        id: row.id,
+        description: row.description,
+        fromAccountId: row.from_account_id,
+        toAccountId: row.to_account_id,
+        amount: row.amount,
+        parentGroupId: row.transaction_group_id
+    })) as TransactionLineDetail[];
+}
+export async function fetchTransactionGroups(): Promise<TransactionGroup[]> {
+    const rows = unwrap(await supabase
+        .from("transaction_groups")
+        .select("*")
+    ) as unknown as TransactionGroupRow[];
+    return rows.map((row) => ({
+        id: row.id,
+        description: row.description,
+        parentGroupId: row.parent_group_id
+    })) as TransactionGroup[];
 }

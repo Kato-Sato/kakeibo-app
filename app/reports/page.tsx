@@ -3,21 +3,26 @@ import { useState, useMemo } from "react";
 import ReportsTable from "@/components/ReportsTable";
 import TransactionList from "@/components/TransactionList";
 import { useAccounts } from "@/hooks/useAccounts";
-import { useTransactions } from "@/hooks/useTransactions";
+import { useTransactionLineDetails, useTransactionGroups } from "@/hooks/useTransactions";
 import { useMonthlyAccountTotals } from "@/hooks/useMonthlyAccountTotals";
 import type { AccountMonth, ReportsType } from "@/domain/reports";
 import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPES } from "@/domain/account";
+import { buildTransactionTree } from "@/domain/transactionGroup";
 
 export default function ReportsPage() {
     const [reportsType, setReportsType] = useState<ReportsType>("expense");
     const [selectedAccountMonth, setSelectedAccountMonth] = useState<AccountMonth | null>(null);
     const accounts = useAccounts();
     const targetAccounts = useMemo(
-        () => accounts.data?.filter((account) => account.accountType === reportsType) ?? [],
+        () => accounts.data?.filter((account) => (account.accountType === reportsType && !account.parentAccountId)) ?? [],
         [accounts.data, reportsType]
     );
     const totals = useMonthlyAccountTotals();
-    const transactions = useTransactions({});
+    const transactions = useTransactionLineDetails({});
+    const groups = useTransactionGroups();
+    const transactionTree = buildTransactionTree(transactions.data ?? [], groups.data ?? []);
+    console.log("transactions", transactions.data);
+    console.log("transactionTree", transactionTree);
 
     return (
         <main>
@@ -48,7 +53,7 @@ export default function ReportsPage() {
                 totals={totals.data ?? []}
                 onSelect={setSelectedAccountMonth}
             />
-            <TransactionList transactions={transactions.data ?? []} accountById={accounts.accountById} />
+            <TransactionList tree={transactionTree} accountById={accounts.accountById} />
         </main>
     );
 }

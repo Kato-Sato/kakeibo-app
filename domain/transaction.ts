@@ -15,18 +15,18 @@ export const TRANSACTION_TYPES = Object.keys(TRANSACTION_TYPE_LABELS) as Transac
 
 export type TransactionSide = "from" | "to";
 type TransactionTypeRule = {
-    from: AccountType;
-    to: AccountType;
+    from: AccountType[];
+    to: AccountType[];
     categorySide: TransactionSide | null;
 };
 
-export const TRANSACTION_TYPE_RULES = {
-    expense:      { from: "asset",     to: "expense",   categorySide: "to"   },
-    income:       { from: "income",    to: "asset",     categorySide: "from" },
-    transfer:     { from: "asset",     to: "asset",     categorySide: null   },
-    borrow:       { from: "liability", to: "asset",     categorySide: "from" },
-    repay:        { from: "asset",     to: "liability", categorySide: "to"   }
-} as const satisfies Record<TransactionType, TransactionTypeRule>;
+export const TRANSACTION_TYPE_RULES: Record<TransactionType, TransactionTypeRule> = {
+    expense:      { from: ["asset", "liability"],     to: ["expense"],   categorySide: "to"   },
+    income:       { from: ["income"],    to: ["asset"],     categorySide: "from" },
+    transfer:     { from: ["asset"],     to: ["asset"],     categorySide: null   },
+    borrow:       { from: ["liability"], to: ["asset"],     categorySide: "from" },
+    repay:        { from: ["asset"],     to: ["liability"], categorySide: "to"   }
+};
 
 // 明細からカテゴリの科目IDを取り出す
 // export function getCategoryAccountId(
@@ -78,16 +78,23 @@ export type TransactionLine = {
     fromAccountId: number;
     toAccountId: number;
     amount: number;
+    parentGroupId: number | null;
 };
-
 export type NewTransactionLine = Omit<TransactionLine, "id">;
+
+export type TransactionLineDetail = TransactionLine & {
+    transactionId: number;
+    occurredOn: string;
+    type: TransactionType;
+    summary: string;
+}
 
 export type TransactionFilter = {
     startDate?: string;  // 日付型
     endDate?: string;
     types?: TransactionType[];
     accountId?: number[];
-}
+};
 
 
 // domain/transaction.ts  以下合っているか確認
@@ -132,5 +139,5 @@ export function isAccountAllowed(
     side: TransactionSide,
     account: AccountNode
 ): boolean {
-    return (isLeaf(account) && account.accountType === TRANSACTION_TYPE_RULES[type][side]);
+    return (isLeaf(account) && TRANSACTION_TYPE_RULES[type][side].includes(account.accountType));
 }

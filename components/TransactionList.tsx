@@ -1,20 +1,31 @@
 import { useAccounts } from "@/hooks/useAccounts";
-import type { Transaction } from "@/domain/transaction";
-
-import TransactionC from "@/components/Transaction";
+import type { TransactionNode } from "@/domain/transactionGroup";
+import LineItem from "@/components/TransactionLine";
 
 export default function TransactionList({
-    transactions,
+    tree,
     accountById
 }: {
-    transactions: Transaction[];
+    tree: TransactionNode[];
     accountById: ReturnType<typeof useAccounts>["accountById"];
 }) {
-    return (
-        <div className="space-y-2">
-            {transactions.map((transaction) => {
-                return <TransactionC key={transaction.id} transaction={transaction} accountById={accountById} />;
-            })}
-        </div>
-    );
+    function renderGroupNode(tree: TransactionNode[]) {
+        return (
+            tree.map((node) => {
+                return (
+                    node.kind === "group"
+                        ? (
+                            <div key={`group-${node.group.id}`} className="grid  items-center rounded border px-4 py-3">
+                                <div>
+                                    <h3>{node.group.description}</h3>
+                                </div>
+                                {renderGroupNode(node.group.children)}
+                            </div>)
+                        : (<LineItem key={`line-${node.line.id}`} line={node.line} accountById={accountById} />)
+                )
+            })
+        );
+        
+    };
+    return renderGroupNode(tree);
 }
