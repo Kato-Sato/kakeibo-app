@@ -1,6 +1,6 @@
 import { useAccounts } from "@/hooks/useAccounts";
 import type { TransactionNode } from "@/domain/transactionGroup";
-import LineItem from "@/components/TransactionLine";
+import LineItem, { TransactionListHeader } from "@/components/TransactionLine";
 
 export default function TransactionList({
     tree,
@@ -9,17 +9,17 @@ export default function TransactionList({
     tree: TransactionNode[];
     accountById: ReturnType<typeof useAccounts>["accountById"];
 }) {
-    function renderGroupNode(tree: TransactionNode[]) {
+    function renderGroupNodes(tree: TransactionNode[]) {
         return (
             tree.map((node) => {
                 return (
                     node.kind === "group"
                         ? (
-                            <div key={`group-${node.group.id}`} className="grid  items-center rounded border px-4 py-3">
-                                <div>
-                                    <h3>{node.group.description}</h3>
+                            <div key={`group-${node.group.id}`}>
+                                <div className="bg-paper px-4 py-2 text-sm font-semibold">
+                                    {node.group.description}
                                 </div>
-                                {renderGroupNode(node.group.children)}
+                                {renderGroupNodes(node.group.children)}
                             </div>)
                         : (<LineItem key={`line-${node.line.id}`} line={node.line} accountById={accountById} />)
                 )
@@ -27,5 +27,10 @@ export default function TransactionList({
         );
         
     };
-    return renderGroupNode(tree);
+    return (
+        <div className="divide-y rounded border bg-surface">
+            <TransactionListHeader />
+            {renderGroupNodes(tree)}
+        </div>
+    );
 }

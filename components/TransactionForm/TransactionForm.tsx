@@ -6,6 +6,7 @@ import TransactionLineForm from "./TransactionLineForm";
 import { TransactionDraft, TransactionLineDraft, draftToTransaction } from "./draft";
 import { createTransaction } from "@/repositories/transactions";
 import { toError } from "@/lib/errors";
+import { SUBMIT_BUTTON_CLASS } from "@/components/formStyle";
 
 function createEmptyDraft(): TransactionDraft {
     return {
@@ -44,7 +45,7 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
 
         try {
             await createTransaction(result.value);
-            setDraft(createEmptyDraft());
+            setDraft({...draft, summary: "", lines: []});
             setSubmitError(null);
             onCreated();
         } catch (err) {
@@ -93,7 +94,6 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
                 value={draft.summary}
                 onChange={(e) => {setDraft((d) => ({...d, summary: e.target.value}))}}
                 placeholder="概要"
-                required
                 className="w-full rounded border px-3 py-2"
             />
 
@@ -118,13 +118,13 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
                         draft.lines.push(createEmptyLineDraft());
                         setDraft({...draft});
                     }}
-                    className="rounded border bg-black px-4 py-2 text-white"
+                    className={SUBMIT_BUTTON_CLASS}
                 >
                     取引を追加
                 </button>
                 <button
                     type="submit"
-                    className="rounded border bg-black px-4 py-2 text-white"
+                    className={SUBMIT_BUTTON_CLASS}
                 >
                     取引を登録
                 </button>

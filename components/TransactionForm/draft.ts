@@ -19,7 +19,7 @@ export type TransactionDraft = {
 
 
 function draftToLine(
-    d: TransactionLineDraft,
+    d: TransactionLineDraft
     // type: TransactionType,
     // accountById: ReadonlyMap<number, Account>,
 ): Result<NewTransactionLine> {
@@ -40,7 +40,7 @@ function draftToLine(
         fromAccountId: d.fromAccountId,
         toAccountId: d.toAccountId,
         amount,
-    });
+    } as NewTransactionLine);
 }
 
 export function draftToTransaction(
@@ -62,5 +62,5 @@ export function draftToTransaction(
         type: draft.type,
         summary: draft.summary.trim(),
         lines
-    });
+    } as NewTransaction);
 }
