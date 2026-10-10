@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { unwrap } from "@/lib/errors";
 import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, TransactionFilter } from "@/domain/transaction";
 import type { TransactionGroup } from "@/domain/transactionGroup";
+import { truncate } from "node:fs";
 
 
 type TransactionRow = {
@@ -112,6 +113,11 @@ export async function fetchTransactionLineDetails(filter: TransactionFilter): Pr
         `)
         .order("occurred_on", {ascending: false, referencedTable: "transactions"})
     ) as unknown as TransactionLineDetailRow[];
+    rows.sort((a, b) =>
+        b.transactions.occurred_on.localeCompare(
+            a.transactions.occurred_on
+        )
+    );
     return rows.map((row) => ({
         transactionId: row.transaction_id,
         occurredOn: row.transactions.occurred_on,

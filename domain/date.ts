@@ -1,4 +1,4 @@
-export const today = "3000-01-01";
+export const today = "2026-08-31";
 
-export function getMonthRange(month: string): { from: string; to: string } {
-}
+// export function getMonthRange(month: string): { from: string; to: string } {
+// }

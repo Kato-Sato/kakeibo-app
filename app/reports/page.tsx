@@ -25,7 +25,7 @@ export default function ReportsPage() {
     console.log("transactionTree", transactionTree);
 
     return (
-        <main>
+        <div>
             <select
                 value={reportsType}
                 onChange={(event) => {
@@ -54,6 +54,6 @@ export default function ReportsPage() {
                 onSelect={setSelectedAccountMonth}
             />
             <TransactionList tree={transactionTree} accountById={accounts.accountById} />
-        </main>
+        </div>
     );
 }

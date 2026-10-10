@@ -1,5 +1,6 @@
 import type { Account } from "@/domain/account";
 import type { MonthlyAccountTotal, AccountMonth } from "@/domain/reports";
+import Amount from "@/components/Amount";
 
 export default function ReportsTable({accounts, totals, onSelect}: {
     accounts: Account[]
@@ -34,7 +35,7 @@ export default function ReportsTable({accounts, totals, onSelect}: {
                         <th className="border p-2">月</th>
                         {accounts.map((account) => {
                             return (
-                                <th key={account.id} className="border p-2">
+                                <th key={account.id} className="border p-2 text-center">
                                     {account.name}
                                 </th>
                             );
@@ -46,11 +47,11 @@ export default function ReportsTable({accounts, totals, onSelect}: {
                     {months.map((month) => {
                         return (
                             <tr key={month}>
-                                <td className="border p-2">{month}</td>
+                                <td className="border p-2 text-center">{month}</td>
                                 {accounts.map((account) => {
                                     return (
-                                        <td key={account.id} className="border p-2" onClick={() => onSelect({ month, accountId: account.id })}>
-                                            {getAmount(month, account.id)}
+                                        <td key={account.id} className="border p-2 text-right" onClick={() => onSelect({ month, accountId: account.id })}>
+                                            <Amount value={getAmount(month, account.id)} />
                                         </td>
                                     );
                                 })}

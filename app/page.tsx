@@ -16,24 +16,20 @@ export default function HomePage() {
         return buildBalanceTree(buildAccountTree(assets), balanceById);
     }, [accounts.data, balances.data]);
     return (
-        <main>
-            <h1 className="text-2xl font-bold">
-                家計簿
-            </h1>
-
+        <div>
             <section className="space-y-4">
                 <h2 className="text-xl font-semibold">
-                    Account追加
+                    口座追加
                 </h2>
                 <AccountForm accounts={accounts.data ?? []} onCreated={() => {accounts.reload(); balances.reload(); }}/>
             </section>
 
             <section className="space-y-4">
                 <h2 className="text-xl font-semibold">
-                    Account一覧
+                    口座一覧
                 </h2>
                 <AccountBalanceList tree={assetTree} />
             </section>
-        </main>
+        </div>
     );
 }
