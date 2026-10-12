@@ -1,14 +1,39 @@
+import { useState, useMemo } from "react";
+import { TransactionType, getAccountCandidates, TRANSACTION_TYPES, TRANSACTION_TYPE_LABELS } from "@/domain/transaction";
 import type { TransactionLineDraft } from "./draft";
-import type { Account } from "@/domain/account";
+import type { Account, AccountNode } from "@/domain/account";
 
-export default function TransactionLineForm({line, fromAccountOptions, toAccountOptions, onChange}: {
+export default function TransactionLineForm({line, accountTree, onChange, onRemove}: {
     line: TransactionLineDraft;
-    fromAccountOptions: Account[];
-    toAccountOptions: Account[];
+    accountTree: AccountNode[];
     onChange: (next: TransactionLineDraft) => void;
+    onRemove: () => void;
 }) {
+    const fromCandidates = useMemo(
+        () => getAccountCandidates(accountTree, line.type, "from"),
+        [accountTree, line.type]
+    );
+    console.log("fromCandidates", fromCandidates);
+    const toCandidates = useMemo(
+        () => getAccountCandidates(accountTree, line.type, "to"),
+        [accountTree, line.type]
+    );
     return (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-[repeat(5,minmax(0,1fr))_auto] items-center gap-3">
+            <select
+                value={line.type}
+                onChange={(e) => {
+                    onChange({...line, type: e.target.value as TransactionType});
+                }}
+                required
+                className="w-full rounded border px-3 py-2"
+            >
+                {TRANSACTION_TYPES.map((key, index) => (
+                    <option key={index} value={key}>
+                        {TRANSACTION_TYPE_LABELS[key]}
+                    </option>
+                ))}
+            </select>
             <input
                 value={line.description}
                 onChange={(event) => onChange({...line, description: event.target.value})}
@@ -27,7 +52,7 @@ export default function TransactionLineForm({line, fromAccountOptions, toAccount
                 <option value="">
                     移動元
                 </option>
-                {fromAccountOptions.map((account) => (
+                {fromCandidates.map((account) => (
                     <option key={account.id} value={account.id}>
                         {account.name}
                     </option>
@@ -45,7 +70,7 @@ export default function TransactionLineForm({line, fromAccountOptions, toAccount
                 <option value="">
                     移動先
                 </option>
-                {toAccountOptions.map((account) => (
+                {toCandidates.map((account) => (
                     <option key={account.id} value={account.id}>
                         {account.name}
                     </option>
@@ -57,13 +82,16 @@ export default function TransactionLineForm({line, fromAccountOptions, toAccount
                 step="1"
                 value={line.amount}
                 onChange={(event) => {
-                    const value = event.target.value;
-                    onChange({...line, amount: value});
+                    onChange({...line, amount: event.target.value});
                 }}
                 placeholder="金額"
                 required
                 className="w-full rounded border px-3 py-2"
             />
+            <button
+                onClick={onRemove}
+                className="flex size-10 items-center justify-center rounded border px-3 py-2 bg-danger text-white cursor-pointer"
+            >消</button>
         </div>
     )
 }

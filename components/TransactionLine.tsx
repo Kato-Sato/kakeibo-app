@@ -16,11 +16,12 @@ export const TRANSACTION_LINE_FIELDS: Record<
     repay:        { from: "hidden",   to: "hidden"   },
 };
 
-const ROW_GRID = "grid grid-cols-[6rem_4rem_minmax(0,1fr)_6rem_6rem_6rem] items-center gap-3 px-4 py-2";
+const ROW_GRID = "grid grid-cols-[1rem_6rem_4rem_minmax(0,1fr)_6rem_6rem_6rem] items-center gap-3 px-4 py-2";
 
 export function TransactionListHeader() {
     return (
         <div className={`${ROW_GRID} text-sm text-gray-500`}>
+            <div></div>
             <div>日付</div>
             <div>種類</div>
             <div>摘要</div>
@@ -31,12 +32,27 @@ export function TransactionListHeader() {
     );
 }
 
-export default function LineItem({ line, accountById }: { line: TransactionLineDetail; accountById: ReadonlyMap<number, Account> }) {
+export default function LineItem({ line, accountById, inEdit, selected, onCheck }: {
+    line: TransactionLineDetail;
+    accountById: ReadonlyMap<number, Account>
+    inEdit: boolean;
+    selected: Set<number>;
+    onCheck: (id: number) => void;
+}) {
     const fromAccountName = getAccountName(accountById, line.fromAccountId);
     const toAccountName = getAccountName(accountById, line.toAccountId);
     return (
         <div>
             {(<div className={ROW_GRID}>
+                <div className="size-4">
+                    {inEdit && (<input
+                        type="checkbox"
+                        checked={selected.has(line.id)}
+                        onChange={() => onCheck(line.id)}
+                        className="size-4 accent-black"
+                    />)}
+                </div>
+                
                 <div className="tabular-nums">{line.occurredOn}</div>
                 <div>{TRANSACTION_TYPE_LABELS[line.type]}</div>
                 <div className="truncate">{line.description}</div>
