@@ -8,10 +8,10 @@ import { truncate } from "node:fs";
 type TransactionRow = {
     id: number;
     occurred_on: string;
-    type: string;
     summary: string;
     transaction_lines: {
         id: number;
+        type: string;
         description: string;
         from_account_id: number;
         to_account_id: number;
@@ -22,6 +22,7 @@ type TransactionRow = {
 
 type TransactionLineDetailRow = {
     id: number;
+    type: string;
     description: string;
     from_account_id: number;
     to_account_id: number;
@@ -30,14 +31,13 @@ type TransactionLineDetailRow = {
     transaction_group_id: number | null;
     transactions: {
         occurred_on: string;
-        type: string;
         summary: string;
     };
 }
 
 type TransactionGroupRow = {
     id: number;
-    description: string;
+    name: string;
     parent_group_id: number | null;
 }
 
@@ -47,10 +47,10 @@ export async function fetchTransactions(filter: TransactionFilter): Promise<Tran
         .select(`
             id,
             occurred_on,
-            type,
             summary,
             transaction_lines (
                 id,
+                type,
                 transaction_id,
                 description,
                 from_account_id,
@@ -65,10 +65,10 @@ export async function fetchTransactions(filter: TransactionFilter): Promise<Tran
     return rows.map((row) => ({
         id: row.id,
         occurredOn: row.occurred_on,
-        type: row.type as TransactionType,
         summary: row.summary,
         lines: row.transaction_lines.map((l) => ({
             id: l.id,
+            type: l.type as TransactionType,
             description: l.description,
             fromAccountId: l.from_account_id,
             toAccountId: l.to_account_id,
@@ -82,8 +82,8 @@ export async function createTransaction(input: NewTransaction): Promise<number> 
         await supabase.rpc("create_transaction", {
             p_occurred_on: input.occurredOn,
             p_summary: input.summary,
-            p_type: input.type,
             p_lines: input.lines.map((line) => ({
+                type: line.type,
                 description: line.description,
                 from_account_id: line.fromAccountId,
                 to_account_id: line.toAccountId,
@@ -99,6 +99,7 @@ export async function fetchTransactionLineDetails(filter: TransactionFilter): Pr
         .from("transaction_lines")
         .select(`
             id,
+            type,
             description,
             from_account_id,
             to_account_id,
@@ -107,7 +108,6 @@ export async function fetchTransactionLineDetails(filter: TransactionFilter): Pr
             transaction_group_id,
             transactions (
                 occurred_on,
-                type,
                 summary
             )
         `)
@@ -121,9 +121,9 @@ export async function fetchTransactionLineDetails(filter: TransactionFilter): Pr
     return rows.map((row) => ({
         transactionId: row.transaction_id,
         occurredOn: row.transactions.occurred_on,
-        type: row.transactions.type as TransactionType,
         summary: row.transactions.summary,
         id: row.id,
+        type: row.type as TransactionType,
         description: row.description,
         fromAccountId: row.from_account_id,
         toAccountId: row.to_account_id,
@@ -138,7 +138,7 @@ export async function fetchTransactionGroups(): Promise<TransactionGroup[]> {
     ) as unknown as TransactionGroupRow[];
     return rows.map((row) => ({
         id: row.id,
-        description: row.description,
+        name: row.name,
         parentGroupId: row.parent_group_id
     })) as TransactionGroup[];
 }

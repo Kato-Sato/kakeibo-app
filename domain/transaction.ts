@@ -64,7 +64,6 @@ export function parseAmount(raw: string): number | null {
 export type Transaction = {
     id: number;
     occurredOn: string;
-    type: TransactionType;
     summary: string;
     lines: TransactionLine[];
 };
@@ -74,6 +73,7 @@ export type NewTransaction = Omit<Transaction, "id" | "lines"> & {
 
 export type TransactionLine = {
     id: number;
+    type: TransactionType;
     description: string;
     fromAccountId: number;
     toAccountId: number;
@@ -85,7 +85,6 @@ export type NewTransactionLine = Omit<TransactionLine, "id">;
 export type TransactionLineDetail = TransactionLine & {
     transactionId: number;
     occurredOn: string;
-    type: TransactionType;
     summary: string;
 }
 

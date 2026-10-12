@@ -2,7 +2,7 @@ import { TransactionLineDetail } from "./transaction";
 
 export type TransactionGroup = {
     id: number;
-    description: string;
+    name: string;
     parentGroupId: number | null;
     sortOrder: number | null;
 };
@@ -15,7 +15,7 @@ export function getGroupDescription(
     groupId: number | null,
 ): string {
     if (groupId === null) return "未分類";
-    return groupById.get(groupId)?.description ?? "（不明なグループ）";
+    return groupById.get(groupId)?.name ?? "（不明なグループ）";
 }
 
 export type GroupNode = TransactionGroup & { children: TransactionNode[]; };

@@ -4,6 +4,7 @@ import { Result, ok, err } from "@/lib/results";
 
 export type TransactionLineDraft = {
     key: string;
+    type: TransactionType;
     description: string;
     fromAccountId: number | null;
     toAccountId: number | null;
@@ -12,7 +13,6 @@ export type TransactionLineDraft = {
 
 export type TransactionDraft = {
     occurredOn: string;
-    type: TransactionType;
     summary: string;
     lines: TransactionLineDraft[];
 };
@@ -36,6 +36,7 @@ function draftToLine(
     // }
 
     return ok({
+        type: d.type,
         description: d.description.trim(),
         fromAccountId: d.fromAccountId,
         toAccountId: d.toAccountId,
@@ -59,7 +60,6 @@ export function draftToTransaction(
 
     return ok({
         occurredOn: draft.occurredOn,
-        type: draft.type,
         summary: draft.summary.trim(),
         lines
     } as NewTransaction);

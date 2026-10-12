@@ -1,6 +1,6 @@
 "use client";
-import { useState, useMemo } from "react";
-import { NewTransaction, TransactionType, TRANSACTION_TYPE_RULES, TRANSACTION_TYPES, TRANSACTION_TYPE_LABELS, getAccountCandidates } from "@/domain/transaction";
+import { useState } from "react";
+import { NewTransaction, TRANSACTION_TYPE_RULES } from "@/domain/transaction";
 import { Account, buildAccountTree } from "@/domain/account";
 import TransactionLineForm from "./TransactionLineForm";
 import { TransactionDraft, TransactionLineDraft, draftToTransaction } from "./draft";
@@ -11,7 +11,6 @@ import { SUBMIT_BUTTON_CLASS } from "@/components/formStyle";
 function createEmptyDraft(): TransactionDraft {
     return {
         occurredOn: "",
-        type: "expense",
         summary: "",
         lines: []
     };
@@ -19,6 +18,7 @@ function createEmptyDraft(): TransactionDraft {
 function createEmptyLineDraft(): TransactionLineDraft {
     return {
         key: crypto.randomUUID(),
+        type: "expense",
         description: "",
         fromAccountId: null,
         toAccountId: null,
@@ -53,16 +53,6 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
         }
     }
 
-    const fromCandidates = useMemo(
-        () => getAccountCandidates(accountTree, draft.type, "from"),
-        [accountTree, draft.type],
-    );
-    const toCandidates = useMemo(
-        () => getAccountCandidates(accountTree, draft.type, "to"),
-        [accountTree, draft.type],
-    );
-    console.log("fromCandidates", fromCandidates);
-
     return (
         <form
             onSubmit={handleSubmit}
@@ -76,19 +66,6 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
                 className="w-full rounded border px-3 py-2"
             />
 
-            <select
-                value={draft.type}
-                onChange={(e) => setDraft({...draft, type: e.target.value as TransactionType})}
-                required
-                className="w-full rounded border px-3 py-2"
-            >
-                {TRANSACTION_TYPES.map((key, index) => (
-                    <option key={index} value={key}>
-                        {TRANSACTION_TYPE_LABELS[key]}
-                    </option>
-                ))}
-            </select>
-
             <input
                 type="text"
                 value={draft.summary}
@@ -101,12 +78,17 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
                 <TransactionLineForm
                     key={line.key}
                     line={line}
-                    fromAccountOptions={fromCandidates}
-                    toAccountOptions={toCandidates}
+                    accountTree={accountTree}
                     onChange={(next) => {setDraft((d) => ({
                         ...d,
                         lines: d.lines.map((l) => (l.key === next.key ? next : l))
                     }))}}
+                    onRemove={() => {
+                        setDraft((d) => ({
+                            ...d,
+                            lines: d.lines.filter((l) => l.key !== line.key)
+                        }));
+                    }}
                 />
             ))}
             
