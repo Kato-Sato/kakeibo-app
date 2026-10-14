@@ -4,12 +4,12 @@ import AccountBalanceList from "@/components/AccountBalanceList";
 import AccountForm from "@/components/AccountForm/AccountForm";
 import { AsyncView } from "@/components/AsyncView";
 import { useAccounts, useAccountBalances } from "@/hooks/useAccounts";
-import { today } from "@/domain/date"
+import { targetDate } from "@/domain/date"
 import { isAsset, buildAccountTree, buildBalanceTree } from "@/domain/account";
 
 export default function HomePage() {
     const accounts = useAccounts();
-    const balances = useAccountBalances(today);
+    const balances = useAccountBalances(targetDate);
     const assetTree = useMemo(() => {
         const balanceById = new Map((balances.data ?? []).map((b) => [b.id, b.balance]));
         const assets = (accounts.data ?? [])//.filter(isAsset);

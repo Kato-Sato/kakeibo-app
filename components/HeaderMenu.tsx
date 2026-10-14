@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 const MENU_ITEMS = [
     { href: "/", label: "ホーム" },
     { href: "/transactions", label: "取引" },
-    { href: "/reports", label: "月次" }
+    { href: "/reports", label: "月次" },
+    { href: "/balance", label: "残高記録" }
 ];
 
 export function HeaderMenu() {

@@ -1,4 +1,5 @@
-import { TransactionType, NewTransaction, NewTransactionLine, parseAmount } from "@/domain/transaction";
+import { TransactionType, NewTransaction, NewTransactionLine } from "@/domain/transaction";
+import { parseAmount } from "@/lib/amount";
 import { Account } from "@/domain/account";
 import { Result, ok, err } from "@/lib/results";
 
