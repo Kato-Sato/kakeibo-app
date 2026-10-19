@@ -1,37 +1,43 @@
-import { useAccounts } from "@/hooks/useAccounts";
+"use client";
+import { useState } from "react";import { useAccounts } from "@/hooks/useAccounts";
 import type { TransactionNode } from "@/domain/transactionGroup";
+import type { AccountNode } from "@/domain/account";
 import LineItem, { TransactionListHeader } from "@/components/TransactionLine";
+import { type EditLineDraft, lineToDraft, collectChangedLines, draftToLine } from "@/components/TransactionForm/draft";
 
 export default function TransactionList({
-    tree, accountById, inEdit, selected, onCheck
+    transactionTree, accountTree, accountById, editing, edits, onChange
 }: {
-    tree: TransactionNode[];
+    transactionTree: TransactionNode[];
+    accountTree: AccountNode[];
     accountById: ReturnType<typeof useAccounts>["accountById"];
-    inEdit: boolean;
-    selected: Set<number>;
-    onCheck: (id: number) => void;
+    editing: boolean;
+    edits: Map<number, EditLineDraft>;
+    onChange: (id: number, draft: EditLineDraft) => void;
 }) {
+
     function renderGroupNodes(tree: TransactionNode[]) {
         return (
             tree.map((node) => {
-                return (
-                    node.kind === "group"
-                        ? (
-                            <div key={`group-${node.group.id}`}>
-                                <div className="bg-paper px-4 py-2 text-sm font-semibold">
-                                    {node.group.name}
-                                </div>
-                                {renderGroupNodes(node.group.children)}
-                            </div>)
-                        : (<LineItem
-                            key={`line-${node.line.id}`}
-                            line={node.line}
-                            accountById={accountById}
-                            inEdit={inEdit}
-                            selected={selected}
-                            onCheck={onCheck}
-                         />)
+                if(node.kind === "group") return (
+                    <div key={`group-${node.group.id}`}>
+                        <div className="bg-paper px-4 py-2 text-sm font-semibold">
+                            {node.group.name}
+                        </div>
+                        {renderGroupNodes(node.group.children)}
+                    </div>
                 )
+                else return (
+                    <LineItem
+                        key={`line-${node.line.id}`}
+                        line={node.line}
+                        accountTree={accountTree}
+                        accountById={accountById}
+                        editing={editing}
+                        editDraft={edits.get(node.line.id) ?? lineToDraft(node.line)}
+                        onChange={onChange}
+                    />
+                );
             })
         );
         
@@ -39,7 +45,7 @@ export default function TransactionList({
     return (
         <div className="divide-y rounded border bg-surface">
             <TransactionListHeader />
-            {renderGroupNodes(tree)}
+            {renderGroupNodes(transactionTree)}
         </div>
     );
 }

@@ -110,7 +110,6 @@ export default function TransactionForm({accounts, onCreated}: {accounts: Accoun
                 >
                     取引を登録
                 </button>
-                
             </div>
         </form>
     );

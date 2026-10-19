@@ -1,20 +1,8 @@
-import { type TransactionLineDetail, type TransactionType, TRANSACTION_TYPE_LABELS } from "@/domain/transaction";
-import { Account, getAccountName } from "@/domain/account";
+import { type TransactionLineDetail, getAccountCandidates, TransactionType, TRANSACTION_TYPES, TRANSACTION_TYPE_LABELS } from "@/domain/transaction";
+import { Account, getAccountName, AccountNode } from "@/domain/account";
 import Amount from "@/components/Amount";
+import type { EditLineDraft } from "@/components/TransactionForm/draft";
 
-// ここ後で調整
-type LineField = "account" | "category" | "card" | "hidden";
-export const TRANSACTION_LINE_FIELDS: Record<
-    TransactionType,
-    { from: LineField; to: LineField }
-> = {
-    expense:      { from: "account",  to: "category" },
-    income:       { from: "category", to: "account"  },
-    transfer:     { from: "account",  to: "account"  },
-    // card_expense: { from: "account",  to: "category" },
-    borrow:       { from: "hidden",   to: "hidden"   },
-    repay:        { from: "hidden",   to: "hidden"   },
-};
 
 const ROW_GRID = "grid grid-cols-[1rem_6rem_4rem_minmax(0,1fr)_6rem_6rem_6rem] items-center gap-3 px-4 py-2";
 
@@ -32,34 +20,91 @@ export function TransactionListHeader() {
     );
 }
 
-export default function LineItem({ line, accountById, inEdit, selected, onCheck }: {
+export default function LineItem({ line, accountTree, accountById, editing, editDraft, onChange }: {
     line: TransactionLineDetail;
-    accountById: ReadonlyMap<number, Account>
-    inEdit: boolean;
-    selected: Set<number>;
-    onCheck: (id: number) => void;
+    accountTree: AccountNode[];
+    accountById: ReadonlyMap<number, Account>;
+    editing: boolean;
+    editDraft: EditLineDraft;
+    onChange: (id: number, draft: EditLineDraft) => void;
 }) {
     const fromAccountName = getAccountName(accountById, line.fromAccountId);
     const toAccountName = getAccountName(accountById, line.toAccountId);
+    const fromCandidates = getAccountCandidates(accountTree, editDraft.type, "from");
+    const toCandidates = getAccountCandidates(accountTree, editDraft.type, "to");
+
+    function changeType(type: TransactionType) {
+        const newFromCandidates = getAccountCandidates(accountTree, type, "from");
+        const newToCandidates = getAccountCandidates(accountTree, type, "to");
+
+        const fromAccountId = newFromCandidates.some((account) => account.id === editDraft.fromAccountId) ? editDraft.fromAccountId : null;
+        const toAccountId = newToCandidates.some((account) => account.id === editDraft.toAccountId) ? editDraft.toAccountId : null;
+        onChange(line.id, {...editDraft, type, fromAccountId, toAccountId});
+    }
+    function AccountSelect({ value, candidates, onChange }: {
+        value: number | null;
+        candidates: Account[];
+        onChange: (id: number | null) => void;
+    }) {
+        return (
+            <select
+                value={value ?? ""}
+                onChange={(e) => {
+                    const id = e.target.value === "" ? null : Number(e.target.value);
+                    onChange(id);
+                }}
+            >
+                <option value="">未選択</option>
+                {candidates.map((account) => (
+                    <option key={account.id} value={account.id}>
+                        {account.name}
+                    </option>
+                ))}
+            </select>
+        );
+    }
+
     return (
-        <div>
-            {(<div className={ROW_GRID}>
-                <div className="size-4">
-                    {inEdit && (<input
-                        type="checkbox"
-                        checked={selected.has(line.id)}
-                        onChange={() => onCheck(line.id)}
-                        className="size-4 accent-black"
-                    />)}
-                </div>
-                
-                <div className="tabular-nums">{line.occurredOn}</div>
-                <div>{TRANSACTION_TYPE_LABELS[line.type]}</div>
-                <div className="truncate">{line.description}</div>
-                <div className="truncate">{fromAccountName}</div>
-                <div className="truncate">{toAccountName}</div>
-                <div className="text-right"><Amount value={line.amount} /></div>
-            </div>)}
+        <div className={ROW_GRID}>
+            <div className="size-4"></div>
+            <div className="tabular-nums">{line.occurredOn}</div>
+            {editing ?
+                <select
+                    value={editDraft.type}
+                    onChange={(e) => changeType(e.target.value as TransactionType)}
+                >
+                    {TRANSACTION_TYPES.map((key) => (
+                        <option key={key} value={key}>
+                            {TRANSACTION_TYPE_LABELS[key]}
+                        </option>
+                    ))}
+                </select>
+                : <div>{TRANSACTION_TYPE_LABELS[line.type]}</div>
+            }
+            {editing
+                ? <input value={editDraft.description} onChange={(e) => onChange(line.id, {...editDraft, description: e.target.value})} />
+                : <div className="truncate">{line.description}</div>
+            }
+            {editing
+                ? <AccountSelect 
+                    value={editDraft.fromAccountId}
+                    candidates={fromCandidates}
+                    onChange={(id) => onChange(line.id, {...editDraft, fromAccountId: id})}
+                />
+                : <div className="truncate">{fromAccountName}</div>
+            }
+            {editing
+                ? <AccountSelect 
+                    value={editDraft.toAccountId}
+                    candidates={toCandidates}
+                    onChange={(id) => onChange(line.id, {...editDraft, toAccountId: id})}
+                />
+                : <div className="truncate">{toAccountName}</div>
+            }
+            {editing
+                ? <input type="number" value={editDraft.amount} onChange={(e) => onChange(line.id, {...editDraft, amount: e.target.value})} className="text-right"/>
+                : <div className="text-right"><Amount value={line.amount} /></div>
+            }
         </div>
     )
 }

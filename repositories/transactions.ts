@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { unwrap } from "@/lib/errors";
-import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, TransactionFilter } from "@/domain/transaction";
+import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, NewTransactionLine, TransactionFilter } from "@/domain/transaction";
 import type { TransactionGroup } from "@/domain/transactionGroup";
 import { truncate } from "node:fs";
 
@@ -90,6 +90,29 @@ export async function createTransaction(input: NewTransaction): Promise<number> 
                 amount: line.amount
             }))
         })
+    );
+}
+
+export async function updateTransactionLines(
+    lines: { id: number; update: NewTransactionLine }[],
+): Promise<void> {
+    await Promise.all(lines.map(({ id, update }) => updateTransactionLine(id, update)));
+}
+
+export async function updateTransactionLine(id: number, update: NewTransactionLine): Promise<void> {
+    unwrap(
+        await supabase
+            .from("transaction_lines")
+            .update({
+                "type": update.type,
+                "description": update.description,
+                "from_account_id": update.fromAccountId,
+                "to_account_id": update.toAccountId,
+                "amount": update.amount,
+                "transaction_group_id": update.parentGroupId
+            })
+            .eq("id", id)
+            .select("id")
     );
 }
 
