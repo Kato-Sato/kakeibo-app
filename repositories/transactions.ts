@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { unwrap } from "@/lib/errors";
-import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, NewTransactionLine, TransactionFilter } from "@/domain/transaction";
+import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, NewTransactionLine, NewTransactionGroup, TransactionFilter } from "@/domain/transaction";
 import type { TransactionGroup } from "@/domain/transactionGroup";
 import { truncate } from "node:fs";
 
@@ -112,6 +112,40 @@ export async function updateTransactionLine(id: number, update: NewTransactionLi
                 "transaction_group_id": update.parentGroupId
             })
             .eq("id", id)
+            .select("id")
+    );
+}
+export async function createTransactionGroups(groups: (NewTransactionGroup & { key: string })[]): Promise<Map<string, number>> {
+    const entries = await Promise.all(
+        groups.map(async (group) => {
+            const id = await createTransactionGroup(group);
+            return [group.key, id] as const;
+        })
+    );
+    return new Map(entries);
+}
+
+async function createTransactionGroup(group: NewTransactionGroup): Promise<number> {
+    const row = unwrap(
+        await supabase
+            .from("transaction_groups")
+            .insert({
+                name: group.name,
+                parent_group_id: group.parentGroupId,
+            })
+            .select("id")
+            .single()
+    ) as { id: number };
+    return row.id;
+}
+
+export async function assignLinesToGroup(lineIds: number[], groupId: number): Promise<void> {
+    if (lineIds.length === 0) return;
+    unwrap(
+        await supabase
+            .from("transaction_lines")
+            .update({ transaction_group_id: groupId })
+            .in("id", lineIds)
             .select("id")
     );
 }

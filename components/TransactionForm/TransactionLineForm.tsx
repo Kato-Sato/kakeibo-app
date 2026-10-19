@@ -90,6 +90,7 @@ export default function TransactionLineForm({line, accountTree, onChange, onRemo
             />
             <button
                 onClick={onRemove}
+                type="button"
                 className="flex size-10 items-center justify-center rounded border px-3 py-2 bg-danger text-white cursor-pointer"
             >消</button>
         </div>

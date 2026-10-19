@@ -1,6 +1,5 @@
-import { TransactionType, NewTransaction, NewTransactionLine, TransactionLineDetail } from "@/domain/transaction";
+import { TransactionType, NewTransaction, NewTransactionLine, TransactionLineDetail, NewTransactionGroup } from "@/domain/transaction";
 import { parseAmount } from "@/lib/amount";
-import { Account } from "@/domain/account";
 import { Result, ok, err } from "@/lib/results";
 
 export type TransactionLineDraft = {
@@ -18,6 +17,12 @@ export type TransactionDraft = {
     occurredOn: string;
     summary: string;
     lines: TransactionLineDraft[];
+};
+
+export type NewGroupDraft = {
+    key: string;
+    name: string;
+    lineIds: ReadonlySet<number>;
 };
 
 export function lineToDraft(line: TransactionLineDetail): EditLineDraft {
@@ -54,6 +59,33 @@ export function collectChangedLines(
         }
     }
     return res;
+}
+
+
+export function draftToGroups(draft: NewGroupDraft[]): Result<NewTransactionGroup[]> {
+    const results = [];
+    for (const d of draft) {
+        const result = draftToGroup(d);
+        if (!result.ok) {
+            return err(result.message);
+        }
+        results.push(result.value);
+    }
+    return ok(results);
+}
+
+export function draftToGroup(d: NewGroupDraft): Result<NewTransactionGroup> {
+    // check 処理
+    if (!d.name.trim()) {
+        return err("グループ名が未入力です");
+    }
+    if (d.lineIds.size === 0) {
+        return err("明細が選択されていません");
+    }
+    return ok({
+        name: d.name.trim(),
+        parentGroupId: null,
+    } as NewTransactionGroup);
 }
 
 export function draftToLine(

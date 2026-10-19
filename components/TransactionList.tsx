@@ -1,12 +1,13 @@
-"use client";
-import { useState } from "react";import { useAccounts } from "@/hooks/useAccounts";
+import { useAccounts } from "@/hooks/useAccounts";
 import type { TransactionNode } from "@/domain/transactionGroup";
 import type { AccountNode } from "@/domain/account";
 import LineItem, { TransactionListHeader } from "@/components/TransactionLine";
-import { type EditLineDraft, lineToDraft, collectChangedLines, draftToLine } from "@/components/TransactionForm/draft";
+import { type EditLineDraft, lineToDraft } from "@/components/TransactionForm/draft";
 
 export type TransactionListEdit = {
     edits: ReadonlyMap<number, EditLineDraft>;
+    selected: ReadonlySet<number>;
+    toggleSelect: (id: number) => void;
     accountTree: AccountNode[];
     onChange: (id: number, draft: EditLineDraft) => void;
 };
@@ -36,6 +37,8 @@ export default function TransactionList({
                         line={node.line}
                         accountById={accountById}
                         editor={edit && {
+                            selected: edit.selected.has(node.line.id),
+                            onToggleSelect: () => edit.toggleSelect(node.line.id),
                             draft: edit.edits.get(node.line.id) ?? lineToDraft(node.line),
                             accountTree: edit.accountTree,
                             onChange: (draft) => edit.onChange(node.line.id, draft)

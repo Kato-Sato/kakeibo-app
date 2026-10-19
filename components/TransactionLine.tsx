@@ -46,15 +46,26 @@ export default function LineItem({ line, accountById, editor }: {
     line: TransactionLineDetail;
     accountById: ReadonlyMap<number, Account>;
     editor?: {
+        selected: boolean;
         draft: EditLineDraft;
         accountTree: AccountNode[];
+        onToggleSelect: () => void;
         onChange: (draft: EditLineDraft) => void;
     }
 }) {
 
     return (
         <div className={ROW_GRID}>
-            <div className="size-4"></div>
+            <div className="size-4">
+                {editor && (
+                    <input
+                        type="checkbox"
+                        checked={editor.selected}
+                        onChange={editor.onToggleSelect}
+                        className="size-4 accent-black"
+                    />
+                )}
+            </div>
             <div className="tabular-nums">{line.occurredOn}</div>
             {editor
                 ? <LineEditCells editor={editor} />
