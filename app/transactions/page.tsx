@@ -4,18 +4,19 @@ import TransactionForm from "@/components/TransactionForm/TransactionForm";
 import TransactionList from "@/components/TransactionList";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactionLineDetails, useTransactionGroups } from "@/hooks/useTransactions";
+import { useTransactionEdit } from "@/hooks/useTransactionEdit";
 import { buildTransactionTree } from "@/domain/transactionGroup";
-import EditButton from "@/components/EditButton";
+import { buildAccountTree } from "@/domain/account";
+import EditPanel from "@/components/EditButton";
 
 export default function TransactionsPage() {    
     const accounts = useAccounts();
     const transactions = useTransactionLineDetails({});
     const groups = useTransactionGroups();
+    const edit = useTransactionEdit(transactions.data ?? [], transactions.reload);
     const transactionTree = buildTransactionTree(transactions.data ?? [], groups.data ?? []);
-    const [selected, setSelected] = useState(new Set<number>());
-    const [inEdit, setInEdit] = useState(false);
-    console.log("transactions", transactions.data);
-    console.log("transactionTree", transactionTree);
+    const accountTree = buildAccountTree(accounts.data ?? []);
+
     return (
         <div>
             <section className="space-y-4">
@@ -23,29 +24,19 @@ export default function TransactionsPage() {
                     <h2 className="text-xl font-semibold">
                         取引一覧
                     </h2>
-                    <EditButton inEdit={inEdit} onClick={() => {
-                        setInEdit(!inEdit);
-                        if(!inEdit) setSelected(new Set());
-                    }}/>
+                    <EditPanel editing={edit.editing} onSave={edit.save} onEdit={edit.startEdit} onCancel={edit.cancelEdit} disabled={edit.saving} />
                 </div>
                 
-
-                {
-                // !inEdit && 
-                <TransactionForm accounts={accounts.data ?? []} onCreated={() => transactions.reload()}/>}
-
+                <TransactionForm accounts={accounts.data ?? []} onCreated={() => transactions.reload()}/>
+                
+                {edit.saveError && <div className="text-red-500">{edit.saveError}</div>}
                 <TransactionList
-                    tree={transactionTree}
+                    transactionTree={transactionTree}
+                    accountTree={accountTree}
                     accountById={accounts.accountById}
-                    inEdit={inEdit}
-                    selected={selected}
-                    onCheck={(id: number) => {
-                        setSelected((prev) => {
-                            const newSet = new Set(prev);
-                            newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-                            return newSet;
-                        });
-                    }}
+                    editing={edit.editing}
+                    edits={edit.edits}
+                    onChange={edit.changeLine}
                 />
             </section>
         </div>

@@ -1,4 +1,4 @@
-import { TransactionType, NewTransaction, NewTransactionLine } from "@/domain/transaction";
+import { TransactionType, NewTransaction, NewTransactionLine, TransactionLineDetail } from "@/domain/transaction";
 import { parseAmount } from "@/lib/amount";
 import { Account } from "@/domain/account";
 import { Result, ok, err } from "@/lib/results";
@@ -12,15 +12,52 @@ export type TransactionLineDraft = {
     amount: string;
 };
 
+export type EditLineDraft = Omit<TransactionLineDraft, "key">
+
 export type TransactionDraft = {
     occurredOn: string;
     summary: string;
     lines: TransactionLineDraft[];
 };
 
+export function lineToDraft(line: TransactionLineDetail): EditLineDraft {
+    return {
+        type: line.type,
+        description: line.description,
+        fromAccountId: line.fromAccountId,
+        toAccountId: line.toAccountId,
+        amount: line.amount.toString(),
+    };
+}
 
-function draftToLine(
-    d: TransactionLineDraft
+export function collectChangedLines(
+    edits: ReadonlyMap<number, EditLineDraft>,
+    lines: TransactionLineDetail[],
+) {
+    const res = [];
+    const lineMap = new Map<number, TransactionLineDetail>();
+    for (const line of lines) {
+        lineMap.set(line.id, line);
+    }
+
+    for (const [id, draft] of edits.entries()) {
+        const original = lineMap.get(id);
+        if (!original) continue;
+        if (
+            original.type !== draft.type ||
+            original.description !== draft.description ||
+            original.fromAccountId !== draft.fromAccountId ||
+            original.toAccountId !== draft.toAccountId ||
+            original.amount.toString() !== draft.amount
+        ) {
+            res.push({ id, draft })
+        }
+    }
+    return res;
+}
+
+export function draftToLine(
+    d: TransactionLineDraft | EditLineDraft,
     // type: TransactionType,
     // accountById: ReadonlyMap<number, Account>,
 ): Result<NewTransactionLine> {
