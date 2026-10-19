@@ -10,7 +10,7 @@ export default function BalanceRecordsPage() {
             <h2 className="text-xl font-semibold">
                 残高記録
             </h2>
-            <BalanceRecordForm onCreated={() => {}} />
+            <BalanceRecordForm onCreated={balanceRecords.reload} />
             <BalanceRecordList balanceRecords={balanceRecords.data ?? []} />
         </div>
     );

@@ -90,6 +90,13 @@ export type TransactionFilter = {
     accountId?: number[];
 };
 
+export type TransactionGroup = {
+    id: number;
+    name: string;
+    parentGroupId: number | null;
+}
+export type NewTransactionGroup = Omit<TransactionGroup, "id">;
+
 
 // domain/transaction.ts  以下合っているか確認
 // function matchesTransaction(t: Transaction, filter: TransactionFilter): boolean {
