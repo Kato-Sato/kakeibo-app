@@ -32,11 +32,12 @@ export default function TransactionsPage() {
                 {edit.saveError && <div className="text-red-500">{edit.saveError}</div>}
                 <TransactionList
                     transactionTree={transactionTree}
-                    accountTree={accountTree}
                     accountById={accounts.accountById}
-                    editing={edit.editing}
-                    edits={edit.edits}
-                    onChange={edit.changeLine}
+                    edit={edit.editing ? {
+                        edits: edit.edits,
+                        accountTree,
+                        onChange: edit.changeLine
+                    } : undefined}
                 />
             </section>
         </div>

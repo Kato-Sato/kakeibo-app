@@ -5,15 +5,18 @@ import type { AccountNode } from "@/domain/account";
 import LineItem, { TransactionListHeader } from "@/components/TransactionLine";
 import { type EditLineDraft, lineToDraft, collectChangedLines, draftToLine } from "@/components/TransactionForm/draft";
 
+export type TransactionListEdit = {
+    edits: ReadonlyMap<number, EditLineDraft>;
+    accountTree: AccountNode[];
+    onChange: (id: number, draft: EditLineDraft) => void;
+};
+
 export default function TransactionList({
-    transactionTree, accountTree, accountById, editing, edits, onChange
+    transactionTree, accountById, edit
 }: {
     transactionTree: TransactionNode[];
-    accountTree: AccountNode[];
     accountById: ReturnType<typeof useAccounts>["accountById"];
-    editing: boolean;
-    edits: Map<number, EditLineDraft>;
-    onChange: (id: number, draft: EditLineDraft) => void;
+    edit?: TransactionListEdit;
 }) {
 
     function renderGroupNodes(tree: TransactionNode[]) {
@@ -31,11 +34,12 @@ export default function TransactionList({
                     <LineItem
                         key={`line-${node.line.id}`}
                         line={node.line}
-                        accountTree={accountTree}
                         accountById={accountById}
-                        editing={editing}
-                        editDraft={edits.get(node.line.id) ?? lineToDraft(node.line)}
-                        onChange={onChange}
+                        editor={edit && {
+                            draft: edit.edits.get(node.line.id) ?? lineToDraft(node.line),
+                            accountTree: edit.accountTree,
+                            onChange: (draft) => edit.onChange(node.line.id, draft)
+                        }}
                     />
                 );
             })

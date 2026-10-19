@@ -53,7 +53,10 @@ export default function ReportsPage() {
                 totals={totals.data ?? []}
                 onSelect={setSelectedAccountMonth}
             />
-            <TransactionList tree={transactionTree} accountById={accounts.accountById} />
+            <TransactionList
+                transactionTree={transactionTree}
+                accountById={accounts.accountById}
+            />
         </div>
     );
 }
