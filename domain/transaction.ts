@@ -23,7 +23,7 @@ type TransactionTypeRule = {
 export const TRANSACTION_TYPE_RULES: Record<TransactionType, TransactionTypeRule> = {
     expense:      { from: ["asset", "liability"],     to: ["expense"],   categorySide: "to"   },
     income:       { from: ["income"],    to: ["asset"],     categorySide: "from" },
-    transfer:     { from: ["asset"],     to: ["asset"],     categorySide: null   },
+    transfer:     { from: ["asset", "liability"],     to: ["asset"],     categorySide: null   },
     borrow:       { from: ["liability"], to: ["asset"],     categorySide: "from" },
     repay:        { from: ["asset"],     to: ["liability"], categorySide: "to"   }
 };
