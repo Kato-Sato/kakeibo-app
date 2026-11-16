@@ -1,6 +1,7 @@
 import { BalanceRecord, NewBalanceRecord } from "@/domain/balanceRecord";
 import { unwrap } from "@/lib/errors";
-import { supabase } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/client'
+const supabase = createClient()
 
 type BalanceRecordRow = {
     id: number;

@@ -1,8 +1,9 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/client'
 import { unwrap } from "@/lib/errors";
 import type { Transaction, TransactionType, TransactionLine, TransactionLineDetail, NewTransaction, NewTransactionLine, NewTransactionGroup, TransactionFilter } from "@/domain/transaction";
 import type { TransactionGroup } from "@/domain/transactionGroup";
 import { truncate } from "node:fs";
+const supabase = createClient()
 
 
 type TransactionRow = {
