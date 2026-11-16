@@ -1,6 +1,7 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/client'
 import { unwrap } from "@/lib/errors";
 import type { Account, AccountBalance, NewAccount, AccountType } from "@/domain/account.ts";
+const supabase = createClient()
 
 type AccountRow = {
     id: number;
