@@ -1,5 +1,5 @@
 import { useAsync } from "./useAsync";
-import { fetchMonthlyAccountTotals } from "@/repositories/reports";
+import { fetchMonthlyAccountTotals } from "../repositories/reports";
 
 export function useMonthlyAccountTotals() {
     return useAsync(() => fetchMonthlyAccountTotals(), []);

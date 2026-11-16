@@ -1,0 +1,166 @@
+/* ===== 行全体 ===== */
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px 0;
+}
+
+/* ===== サムネイル ===== */
+.thumbnail {
+  position: relative; /* 時間バッジの基準位置 */
+  flex-shrink: 0;
+  width: 240px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #222; /* 画像読み込み前の背景 */
+}
+
+.thumbnail a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 右下の動画時間バッジ */
+.duration {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums; /* 数字幅を揃える */
+  pointer-events: none; /* 下のリンクのクリックを妨げない */
+}
+
+/* ===== 機能バッジ（Subtitle / Voice） ===== */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* あり */
+.badgeOn {
+  background: #e6f4ea;
+  border-color: #b7dfc2;
+  color: #1e7a3c;
+}
+
+/* なし */
+.badgeOff {
+  background: transparent;
+  border-color: #d0d0d0;
+  color: #999;
+  text-decoration: line-through;
+}
+
+/* ===== 情報エリア ===== */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0; /* 長いタイトルのはみ出し防止 */
+}
+
+.title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 2行で省略 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: inherit;
+  text-decoration: none;
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+/* ===== プラットフォームリンク ===== */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.platformLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.platformLink:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* YouTube */
+.youtube {
+  color: #ff0000;
+  border-color: #ff0000;
+}
+
+.youtube:hover {
+  background: #ff0000;
+  color: #fff;
+}
+
+/* Patreon */
+.patreon {
+  color: #f96854;
+  border-color: #f96854;
+}
+
+.patreon:hover {
+  background: #f96854;
+  color: #fff;
+}
+
+/* ===== スマホ対応 ===== */
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .thumbnail {
+    width: 100%;
+  }
+}
