@@ -5,7 +5,7 @@ import TransactionList from "@/components/TransactionList";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useTransactionLineDetails, useTransactionGroups } from "@/hooks/useTransactions";
 import { useMonthlyAccountTotals } from "@/hooks/useMonthlyAccountTotals";
-import type { AccountMonth, ReportsType } from "@/domain/reports";
+import type { AccountMonth, MonthlyAccountTotal, ReportsType } from "@/domain/reports";
 import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPES } from "@/domain/account";
 import { buildTransactionTree } from "@/domain/transactionGroup";
 
@@ -50,7 +50,7 @@ export default function ReportsPage() {
             </div>
             <ReportsTable
                 accounts={targetAccounts}
-                totals={totals.data ?? []}
+                totals={(totals.data as MonthlyAccountTotal[] | undefined) ?? []}
                 onSelect={setSelectedAccountMonth}
             />
             <TransactionList

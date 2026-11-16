@@ -1,7 +1,12 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/client'
 import { unwrap } from "@/lib/errors";
-import { MonthlyAccountTotal } from "@/domain/monthly";
+const supabase = createClient()
 
+type MonthlyAccountTotal = {
+    accountId: number;
+    month: string;
+    total: number;
+}
 
 type MonthlyAccountTotalRow = {
     account_id: number;
